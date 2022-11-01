@@ -12,20 +12,9 @@ from torch import nn
 import math
 from torch.nn.parameter import Parameter
 from torch.nn import functional as F
-import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
-import scipy.io as sio
-from scipy.io import savemat
-from sklearn.manifold import TSNE
-import seaborn as sns
-from torchvision.utils import save_image, make_grid
-import torchvision.transforms as transforms
-from torch.utils.data import DataLoader
-from sklearn.manifold import TSNE
-from sklearn.cluster import DBSCAN
 import os
-
+from utils import *
 np.random.seed(4)
 epochs =70
 MEMDIM=200
@@ -34,27 +23,25 @@ batch=1
 """# **Data loading**"""
 
 # load the data
-d = sio.loadmat('HIAQ.mat') 
-Xtrn = d['Xtrn']
-Xtst = d['tst_f']
-Xtst_real = d['tst_r']
-print(Xtrn.shape)
-print(Xtst.shape)
-print(Xtst_real.shape)
+train_data, test_data = data_loading()
+sensors= ['PM25', 'PM10', 'CO2', 'Temp','Humidity']
+df=pd.DataFrame(train_data, columns=sensors)  # df is for training
+df_real= pd.DataFrame(test_data, columns=sensors) # real test data
+df_faulty= fault_generation(df_real.copy(), type='Complete_failure')
+df_n= fault_generation(df_real.copy(), type='Degradation', magnitude=1, start=0, stop=len(df_real))
+
+# mu, sigma = 0, 0.1
+# # creating a noise with the same dimension as the dataset
+# noise = np.random.normal(mu, sigma, [7000,5])
 
 
-mu, sigma = 0, 0.1 
-# creating a noise with the same dimension as the dataset 
-noise = np.random.normal(mu, sigma, [7000,5])  
-
-
-X_noisy = Xtrn+3*noise
-#con = np.concatenate((Xtrn, X_noisy[0:1000]))
-
-df_n=pd.DataFrame(X_noisy, columns=['PM25', 'PM10', 'CO2', 'Temp','Humidity'])
-df=pd.DataFrame(Xtrn, columns=['PM25', 'PM10', 'CO2', 'Temp','Humidity'])
-df_faulty=pd.DataFrame(Xtst, columns=['PM25', 'PM10', 'CO2', 'Temp','Humidity'])
-df_real= pd.DataFrame(Xtst_real, columns=['PM25', 'PM10', 'CO2', 'Temp','Humidity'])
+# X_noisy = Xtrn+3*noise
+# #con = np.concatenate((Xtrn, X_noisy[0:1000]))
+#
+# df_n=pd.DataFrame(X_noisy, columns=['PM25', 'PM10', 'CO2', 'Temp','Humidity'])
+# df=pd.DataFrame(Xtrn, columns=['PM25', 'PM10', 'CO2', 'Temp','Humidity'])
+# df_faulty=pd.DataFrame(Xtst, columns=['PM25', 'PM10', 'CO2', 'Temp','Humidity'])
+# df_real= pd.DataFrame(Xtst_real, columns=['PM25', 'PM10', 'CO2', 'Temp','Humidity'])
 
 from statsmodels.graphics.tsaplots import plot_acf
 

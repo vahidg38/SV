@@ -22,13 +22,14 @@ test_faulty= fault_generation(test.copy(), type='Complete_failure')
 # Generating  noisy train dataframe
 train_n= fault_generation(train.copy(), type='Degradation', magnitude=1, start=0, stop=len(train))  # noisy train data
 
-model= model(args, train, train_n, test, test_faulty)
-#model train
+model= model(args, train, train_n, test, test_faulty, norm)
+
 # model reconstruct
 
 
 model.train_model()
-
+model.reconstruct(train, description="train")
+model.reconstruct(test, description="test")
 raise Exception("Inappropriate failure type.")
 
 

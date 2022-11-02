@@ -1,8 +1,8 @@
 from model_utils import *
 import os
 import matplotlib.pyplot as plt
-
-
+import pandas as pd
+from utils import *
 class base_AE(nn.Module):
     def __init__(self):
         super(base_AE, self).__init__()
@@ -101,9 +101,10 @@ def make_dir(model):
 
 class model():
 
-    def __init__(self, args, train, train_n, test, test_faulty):
+    def __init__(self, args, train, train_n, test, test_faulty, norm):
 
         self.args = args
+        self.norm=norm
         self.train = train
         self.train_n = train_n
         self.test = test
@@ -231,3 +232,30 @@ class model():
         plt.title(f"Training loss for {self.args.model}")
         plt.savefig(f'./{self.args.model}/{self.args.model}_loss.png', bbox_inches="tight", pad_inches=0.0)
         plt.clf()
+
+    def reconstruct(self, dataframe, description="Reconstruction"):
+
+        model_para = torch.load(f'./{self.args.model}/{self.args.model}_final.pt')
+        self.model_.load_state_dict(model_para)
+
+        result=[]
+        for i in range(len(dataframe)):
+            obs = torch.from_numpy(dataframe.iloc[i + 0:i + 1].to_numpy())
+            reconstructed = self.model_(obs.float())
+            result.append(reconstructed['output'].detach().numpy()[0])
+
+        #result= de_normalize_2d(np.array(result),self.norm)
+
+        df_result = pd.DataFrame(result, columns=self.train.columns)
+        df_result  = de_normalize_2d(df_result , self.norm)
+        dataframe=  de_normalize_2d(dataframe , self.norm)
+        for b in self.train.columns:
+            plt.plot(df_result[b].iloc[0:700], linestyle='dotted', color='red', label=f'Reconstructed_{self.args.model}',
+                     marker='.')
+
+            plt.plot(dataframe[b].iloc[0:700], label='Actual', color='blue', marker='.')
+            plt.legend()
+            plt.xlabel(f"{b}_train")
+            plt.title(description)
+            plt.savefig(f'./{self.args.model}/{self.args.model}_{b}_{description}.jpg.png' , bbox_inches="tight", pad_inches=0.0)
+            plt.clf()

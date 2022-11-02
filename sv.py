@@ -23,7 +23,7 @@ batch=1
 """# **Data loading**"""
 
 # load the data
-train_data, test_data = data_loading()
+train_data, test_data, norm = data_loading()
 sensors= ['PM25', 'PM10', 'CO2', 'Temp','Humidity']
 df=pd.DataFrame(train_data, columns=sensors)  # df is for training
 df_real= pd.DataFrame(test_data, columns=sensors) # real test data

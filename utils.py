@@ -88,3 +88,10 @@ def data_loading(mat_file='IAQ_2month_Vah.mat', train_test_ratio=4):
         test_data.append(d[i])
 
     return train_data, test_data, norm
+
+def create_dataframe(train_data, test_data):
+    sensors = ['PM25', 'PM10', 'CO2', 'Temp', 'Humidity']
+    train_df = pd.DataFrame(train_data, columns=sensors)  # df is for training
+    test_real_df = pd.DataFrame(test_data, columns=sensors)  # real test data
+
+    return train_df, test_real_df

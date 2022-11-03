@@ -27,7 +27,7 @@ class base_AE(nn.Module):
 class MemAE(nn.Module):
     def __init__(self, mem_dim=100, shrink_thres=0.0025):
         super(MemAE, self).__init__()
-        print('MemAE')
+
 
         self.encoder = nn.Sequential(
 
@@ -117,6 +117,7 @@ class model():
         self.mem = False
         self.entropy_loss_weight = 0
 
+        print(f"{self.args.model} is selected")
         make_dir(self.args.model)
 
         match self.args.model:
@@ -143,30 +144,32 @@ class model():
             case "MVAE":
                 encoder = Encoder(input_dim=5, hidden_dim=3, latent_dim=2)
                 decoder = Decoder(latent_dim=2, hidden_dim=3, output_dim=5)
-                self.model = MVAE(Encoder=encoder, Decoder=decoder, mem_dim=self.args.memdim, shrink_thres=0.0025)
-                elf.entropy_loss_weight = 0.0002
+                self.model_ = MVAE(Encoder=encoder, Decoder=decoder, mem_dim=self.args.memdim, shrink_thres=0.0025)
+                self.entropy_loss_weight = 0.0002
                 self.mem = True
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
 
     def plot_memory(self, model, epoch):
-
+        if not os.path.exists(f'./{self.args.model}/MemoryElements'):
+            os.mkdir(f'./{self.args.model}/MemoryElements')
         plt.scatter(model.mem_rep.melements.detach().numpy()[:, 0], model.mem_rep.melements.detach().numpy()[:, 1])
         # plt.show()
         plt.ylabel("Feature2")
         plt.xlabel("Feature1")
         plt.title("Memory_Elements_MemAE")
-        plt.savefig(f'./MemAE_Mem/MemAE_{epoch}.jpg', bbox_inches="tight", pad_inches=0.0)
+        plt.savefig(f'./{self.args.model}/MemoryElements/Epoch_{epoch}.jpg', bbox_inches="tight", pad_inches=0.0)
         plt.clf()
 
     def train_model(self):
         wait = 0
         epoch_loss = []
+        eot=False # end of training
         for epoch in range(self.args.epochs):
 
             if self.mem:  # if model has memory module plot the elements during training
                 self.plot_memory(self.model_, epoch)
 
-            eot = False  # end of training
+
 
             if (eot == True):
                 break
@@ -213,7 +216,7 @@ class model():
                     if wait > self.args.patience:
                         print("End of training")
                         eot = True
-                        torch.save(self.model_.state_dict(), f'./{self.args.model}/{self.model}_final.pt')
+                        torch.save(self.model_.state_dict(), f'./{self.args.model}/{self.args.model}_final.pt')
                         print("early stopping")
 
                 else:
@@ -238,11 +241,13 @@ class model():
         model_para = torch.load(f'./{self.args.model}/{self.args.model}_final.pt')
         self.model_.load_state_dict(model_para)
 
-        result=[]
+        result=[] # reconstructed values
+        latent=[]
         for i in range(len(dataframe)):
             obs = torch.from_numpy(dataframe.iloc[i + 0:i + 1].to_numpy())
             reconstructed = self.model_(obs.float())
             result.append(reconstructed['output'].detach().numpy()[0])
+            #latent.append(reconstructed['latent'].detach().numpy()[0])
 
         #result= de_normalize_2d(np.array(result),self.norm)
 

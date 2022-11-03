@@ -75,23 +75,24 @@ def data_loading(mat_file='IAQ_2month_Vah.mat', train_test_ratio=4):
     d = sio.loadmat(mat_file)
     d = d["Platfrom_C"]
 
-    d, norm = normalize_2d(d)
+    #d, norm = normalize_2d(d)
 
     train_data = []
     test_data = []
 
-    t = train_test_ratio / (train_test_ratio + 1)
 
-    for i in range(ceil(d.shape[0] * t)):
-        train_data.append(d[i])
-    for j in range(ceil(d.shape[0] * t), d.shape[0]):
-        test_data.append(d[i])
 
-    return train_data, test_data, norm
+    for i in range(d.shape[0]):
+        if i% (train_test_ratio+1)==0:
+         test_data.append(d[i])
+        else:
+         train_data.append(d[i])
 
-def create_dataframe(train_data, test_data):
+
+    return train_data, test_data
+
+def create_dataframe(data):
+
     sensors = ['PM25', 'PM10', 'CO2', 'Temp', 'Humidity']
-    train_df = pd.DataFrame(train_data, columns=sensors)  # df is for training
-    test_real_df = pd.DataFrame(test_data, columns=sensors)  # real test data
-
-    return train_df, test_real_df
+    data = pd.DataFrame(data, columns=sensors)
+    return data

@@ -252,8 +252,8 @@ class model():
         #result= de_normalize_2d(np.array(result),self.norm)
 
         df_result = pd.DataFrame(result, columns=self.train.columns)
-        df_result  = de_normalize_2d(df_result , self.norm)
-        dataframe=  de_normalize_2d(dataframe , self.norm)
+
+
         for b in self.train.columns:
             plt.plot(df_result[b].iloc[0:700], linestyle='dotted', color='red', label=f'Reconstructed_{self.args.model}',
                      marker='.')

@@ -21,11 +21,19 @@ train_noisy= train_data + noise
 
 # Generating  train and real_test , and noisy train dataframes
 train, test, train_n = create_dataframe(train_data), create_dataframe(test_data), create_dataframe(train_noisy)
+# print(train.describe())
+# print(test.describe())
+# print(train_n.describe())
+
+#normalizing the data
+train, test, train_n = normalize(train, test , train_n)
 print(train.describe())
 print(test.describe())
 print(train_n.describe())
+# train.plot(kind= 'bar')
+# test.plot(kind= 'bar')
+# train_n.plot(kind= 'bar')
 
-raise Exception("Inappropriate sensor name.")
 # Generating  faulty_test dataframe
 test_faulty= fault_generation(test.copy(), type='Complete_failure')
 

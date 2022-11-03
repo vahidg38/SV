@@ -54,6 +54,7 @@ def fault_generation(df_real, type='bias', sensor='PM25', magnitude=0, start=0, 
 
     else:
         raise Exception("Inappropriate failure type.")
+
     df_real.drop(sensor, axis=1, inplace=True)
     # df_real[sensor] = faulty
     df_real.insert(pos, sensor, faulty, True)
@@ -61,26 +62,30 @@ def fault_generation(df_real, type='bias', sensor='PM25', magnitude=0, start=0, 
 
 
 # explicit function to normalize array
-def normalize_2d(matrix):
-    norm = np.linalg.norm(matrix)
-    matrix = matrix / norm  # normalized matrix
-    return matrix, norm
+def normalize(train, test , train_n):
+    # copy the data
+    df_z_scaled_train = train.copy()
+    df_z_scaled_test = test.copy()
+    df_z_scaled_train_n = train_n.copy()
+
+    # apply normalization techniques
+    for column in df_z_scaled_train.columns:
+        df_z_scaled_train[column] = (df_z_scaled_train[column] -df_z_scaled_train[column].mean()) / df_z_scaled_train[column].std()
+        df_z_scaled_test[column] = ( df_z_scaled_test[column] - df_z_scaled_test[column].mean()) / df_z_scaled_test[column].std()
+        df_z_scaled_train_n[column] = (df_z_scaled_train_n[column] - df_z_scaled_train_n[column].mean()) / df_z_scaled_train_n[column].std()
+
+    # view normalized data
+    return df_z_scaled_train, df_z_scaled_test , df_z_scaled_train_n
 
 
-def de_normalize_2d(matrix, norm):
-    matrix = matrix * norm  # denormalized matrix
-    return matrix
+
 
 def data_loading(mat_file='IAQ_2month_Vah.mat', train_test_ratio=4):
     d = sio.loadmat(mat_file)
     d = d["Platfrom_C"]
 
-    #d, norm = normalize_2d(d)
-
     train_data = []
     test_data = []
-
-
 
     for i in range(d.shape[0]):
         if i% (train_test_ratio+1)==0:

@@ -26,4 +26,31 @@ def get_args():
                         ],
                         help=' model selection')
 
+    parser.add_argument('-sf', '--failure', type=str, default='Complete_failure',
+                        choices=[
+                            'Bias', 'Complete_failure','Drift', 'Degradation'
+                        ],
+                        help=' failure type')
+
+    parser.add_argument('-psta', '--pstart', type=int, default=0,
+                        help='plot start point')
+
+    parser.add_argument('-psto', '--pstop', type=int, default=700,
+                        help='plot stop point')
+
+    parser.add_argument('-fsta', '--fstart', type=int, default=0,
+                        help='Fault period start point')
+
+    parser.add_argument('-fsto', '--fstop', type=int, default=200,
+                        help='Fault period stop point')
+
+    parser.add_argument('-fm', '--fmagnitude', type=int, default=0,
+                        help='Fault magnitude')
+
+    parser.add_argument('-fs', '--fsensor', type=str, default='PM25',
+                        choices=[
+                            'PM25', 'PM10', 'CO2', 'Temp','Humidity'
+                        ],
+                        help=' Faulty sensor')
+
     return parser.parse_args()

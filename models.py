@@ -115,6 +115,10 @@ class model():
         self.entropy_loss_weight = 0.0002
         self.mem = False
         self.entropy_loss_weight = 0
+        self.pstart=args.pstart
+        self.pstop=args.pstop
+
+
 
         print(f"{self.args.model} is selected")
         make_dir(self.args.model)
@@ -256,13 +260,21 @@ class model():
         df_result =de_normalize(df_result,dataframe_ori)
         dataframe= de_normalize(dataframe,dataframe_ori)
 
+        if description== self.args.failure:
+            self.pstart= self.args.fstart
+            self.pstop= self.args.fstop
+
         for b in self.train.columns:
-            plt.plot(df_result[b].iloc[0:700], linestyle='dotted', color='red', label=f'Reconstructed_{self.args.model}',
+            plt.plot(df_result[b].iloc[self.pstart:self.pstop], linestyle='dotted', color='red', label=f'Reconstructed_{self.args.model}',
                      marker='.')
 
-            plt.plot(dataframe[b].iloc[0:700], label='Actual', color='blue', marker='.')
+            plt.plot(dataframe[b].iloc[self.pstart:self.pstop], label='Sensor data', color='blue', marker='.')
+
+            if description== self.args.failure:
+                plt.plot(dataframe_ori[b].iloc[self.pstart:self.pstop], label='Actual', color='black', marker='.')
+
             plt.legend()
-            plt.xlabel(f"{b}_train")
+            plt.xlabel(f"{b}")
             plt.title(description)
             plt.savefig(f'./{self.args.model}/{self.args.model}_{b}_{description}.jpg.png' , bbox_inches="tight", pad_inches=0.0)
             plt.clf()

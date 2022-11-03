@@ -74,11 +74,21 @@ def normalize(train, test , train_n):
         df_z_scaled_test[column] = ( df_z_scaled_test[column] - df_z_scaled_test[column].mean()) / df_z_scaled_test[column].std()
         df_z_scaled_train_n[column] = (df_z_scaled_train_n[column] - df_z_scaled_train_n[column].mean()) / df_z_scaled_train_n[column].std()
 
-    # view normalized data
+
     return df_z_scaled_train, df_z_scaled_test , df_z_scaled_train_n
 
 
+def de_normalize(df, df_ori):
+    # copy the data
+    df_denorm = df.copy()
 
+    # apply normalization techniques
+    for column in df_denorm.columns:
+        df_denorm [column] = (df_denorm [column]* df_ori[column].std()) + df_ori[column].mean()
+
+
+
+    return df_denorm
 
 def data_loading(mat_file='IAQ_2month_Vah.mat', train_test_ratio=4):
     d = sio.loadmat(mat_file)

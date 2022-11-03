@@ -101,10 +101,9 @@ def make_dir(model):
 
 class model():
 
-    def __init__(self, args, train, train_n, test, test_faulty, norm):
+    def __init__(self, args, train, train_n, test, test_faulty):
 
         self.args = args
-        self.norm=norm
         self.train = train
         self.train_n = train_n
         self.test = test
@@ -236,7 +235,7 @@ class model():
         plt.savefig(f'./{self.args.model}/{self.args.model}_loss.png', bbox_inches="tight", pad_inches=0.0)
         plt.clf()
 
-    def reconstruct(self, dataframe, description="Reconstruction"):
+    def reconstruct(self, dataframe,dataframe_ori, description="Reconstruction"):
 
         model_para = torch.load(f'./{self.args.model}/{self.args.model}_final.pt')
         self.model_.load_state_dict(model_para)
@@ -253,6 +252,9 @@ class model():
 
         df_result = pd.DataFrame(result, columns=self.train.columns)
 
+
+        df_result =de_normalize(df_result,dataframe_ori)
+        dataframe= de_normalize(dataframe,dataframe_ori)
 
         for b in self.train.columns:
             plt.plot(df_result[b].iloc[0:700], linestyle='dotted', color='red', label=f'Reconstructed_{self.args.model}',

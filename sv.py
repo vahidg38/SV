@@ -26,6 +26,7 @@ print(test_ori.describe())
 print(train_n_ori.describe())
 
 #normalizing the data
+
 train, test, train_n = normalize(train_ori, test_ori, train_n_ori)
 # print(train.describe())
 # print(test.describe())

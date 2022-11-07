@@ -38,7 +38,7 @@ class build_base_AE(nn.Module):
             en_layers.append(nn.Linear(in_features, out_features))
             de_layers.append(nn.Linear(out_features, in_features))
             en_layers.append(nn.ReLU())
-
+            de_layers.append(nn.ReLU())
 
 
             in_features = out_features
@@ -69,6 +69,44 @@ class MemAE(nn.Module):
             nn.Linear(2, 5)
 
         )
+
+    def forward(self, x):
+        f = self.encoder(x)
+        res_mem = self.mem_rep(f)
+        f = res_mem['output']
+        att = res_mem['att']
+        output = self.decoder(f)
+        return {'output': output, 'att': att, 'latent': f}
+
+class build_MemAE(nn.Module):
+    def __init__(self, trial):
+
+        super(build_MemAE, self).__init__()
+        n_layers = trial.suggest_int("n_layers", 1, 3)
+        in_features = 5
+        en_layers = []
+        de_layers = []
+        out_features=2 #default value to be global
+        for i in range(n_layers):
+            out_features = trial.suggest_int("n_units_l{}".format(i), 1, 5)
+            en_layers.append(nn.Linear(in_features, out_features))
+            de_layers.append(nn.Linear(out_features, in_features))
+            en_layers.append(nn.ReLU())
+            de_layers.append(nn.ReLU())
+            in_features = out_features
+        self.encoder = nn.Sequential(*en_layers)
+        print(self.encoder)
+        de_layers = de_layers[:-1]  # remove the relu
+        de_layers = de_layers[::-1]  # reverse
+
+        self.decoder = nn.Sequential(*de_layers)
+        print(self.decoder)
+
+        mem_dim=trial.suggest_int("n_units_l{}".format(i), 50, 350)
+        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim= out_features, shrink_thres=0.0025)
+        print(self.mem_rep)
+
+
 
     def forward(self, x):
         f = self.encoder(x)
@@ -273,19 +311,15 @@ class model():
 
 
             case "MAE":
-                self.model_ = MemAE(mem_dim=self.args.memdim, shrink_thres=0.0025)
+                return build_MemAE(trial)
 
 
             case "VAE":
-                encoder = Encoder(input_dim=5, hidden_dim=3, latent_dim=2)
-                decoder = Decoder(latent_dim=2, hidden_dim=3, output_dim=5)
-                self.model_ = VAE(Encoder=encoder, Decoder=decoder)
+                pass
 
 
             case "MVAE":
-                encoder = Encoder(input_dim=5, hidden_dim=3, latent_dim=2)
-                decoder = Decoder(latent_dim=2, hidden_dim=3, output_dim=5)
-                self.model_ = MVAE(Encoder=encoder, Decoder=decoder, mem_dim=self.args.memdim, shrink_thres=0.0025)
+                pass
 
 
 
@@ -409,7 +443,7 @@ class model():
 
         return df_result, dataframe
 
-    def optimization(self):
+    def optimization(self): #https://github.com/optuna/optuna-examples/blob/main/pytorch/pytorch_simple.py
         print(f"Optimizing {self.args.model}")
         study = optuna.create_study(direction="minimize")
         study.optimize(self.objective, n_trials=100)

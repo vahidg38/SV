@@ -39,14 +39,15 @@ test_faulty= fault_generation(test.copy(), type=args.failure, sensor=args.fsenso
 
 
 
-# args.model="MAE"
-# MAE= model(args, train, train_n, test, test_faulty)
-# #MAE.train_model()
-# MAE.reconstruct(train,train_ori, description="train")
-# z, x= MAE.reconstruct(test,test_ori ,description="test")
-# print(f"MSE for {args.model}:  {MSE(z,x)}")
-# print(f"RR for {args.model}:  {RR(z,x)}")
-# MAE.reconstruct(test_faulty,test_ori ,description=args.failure)
+args.model="MAE"
+MAE= model(args, train, train_n, test, test_faulty)
+MAE.optimization()
+#MAE.train_model()
+MAE.reconstruct(train,train_ori, description="train")
+z, x= MAE.reconstruct(test,test_ori ,description="test")
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
+MAE.reconstruct(test_faulty,test_ori ,description=args.failure)
 
 args.model="AE"
 AE= model(args, train, train_n, test, test_faulty)

@@ -3,7 +3,7 @@ from math import ceil
 from statistics import mean, stdev
 import pandas as pd
 import numpy as np
-
+from sklearn.metrics import r2_score
 
 def fault_generation(df_real, type='bias', sensor='PM25', magnitude=0, start=0, stop=100):
     if (start < 0) or (stop > len(df_real)) or (start == stop):
@@ -111,3 +111,48 @@ def create_dataframe(data):
     sensors = ['PM25', 'PM10', 'CO2', 'Temp', 'Humidity']
     data = pd.DataFrame(data, columns=sensors)
     return data
+
+
+# Mean Square Error
+def MSE(true, predicted):
+    true = np.array(true)
+    predicted = np.array(predicted)
+    squared_diff = np.square(true - predicted)
+    return np.mean(squared_diff)
+
+
+# Root Mean Square Error
+def RMSE(true, predicted):
+    true = np.array(true)
+    predicted = np.array(predicted)
+    squared_diff = np.square(true - predicted)
+    return np.sqrt(np.mean(squared_diff))
+
+
+# R-squared, coefficient of determination
+def MAPE(true, predicted):
+    true = np.array(true)
+    predicted = np.array(predicted)
+    percentage = np.mean(np.abs((true - predicted) / true)) * 100
+    return percentage
+
+
+# Mean Absolute Error
+def MAE(true, predicted):
+    true = np.array(true)
+    predicted = np.array(predicted)
+    return np.mean(np.abs(true - predicted))
+
+
+def RR(true, predicted):
+    true = np.array(true)
+    predicted = np.array(predicted)
+    RR = r2_score(true, predicted)
+    return RR
+
+
+# Mean absolute scaled error
+def MASE(true, predicted, seasonality):
+    true = np.array(true)
+    predicted = np.array(predicted)
+    return MAE(true, predicted) / MAE(true[seasonality:], true[:-seasonality])

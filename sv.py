@@ -1,7 +1,8 @@
 #by Vahid
-
+#https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_autoencoder/
 from models import *
 from arguments import *
+from sklearn.decomposition import PCA
 
 args = get_args()
 
@@ -32,7 +33,6 @@ train, test, train_n = normalize(train_ori, test_ori, train_n_ori)
 # print(test.describe())
 # print(train_n.describe())
 
-
 # Generating  faulty_test dataframe
 test_faulty= fault_generation(test.copy(), type=args.failure, sensor=args.fsensor, magnitude=args.fmagnitude, start=args.fstart, stop=args.fstop)
 
@@ -43,21 +43,29 @@ args.model="MAE"
 MAE= model(args, train, train_n, test, test_faulty)
 #MAE.train_model()
 MAE.reconstruct(train,train_ori, description="train")
-MAE.reconstruct(test,test_ori ,description="test")
+z, x= MAE.reconstruct(test,test_ori ,description="test")
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
 MAE.reconstruct(test_faulty,test_ori ,description=args.failure)
 
 args.model="AE"
 AE= model(args, train, train_n, test, test_faulty)
 #AE.train_model()
 AE.reconstruct(train,train_ori, description="train")
-AE.reconstruct(test, test_ori, description="test")
+z, x= AE.reconstruct(test, test_ori, description="test")
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
 AE.reconstruct(test_faulty,test_ori ,description=args.failure)
+
+
 
 args.model="DAE" 
 DAE= model(args, train, train_n, test, test_faulty)
 #DAE.train_model()
 DAE.reconstruct(train,train_ori, description="train")
-DAE.reconstruct(test,test_ori, description="test")
+z, x= DAE.reconstruct(test,test_ori, description="test")
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
 DAE.reconstruct(test_faulty,test_ori ,description=args.failure)
 
 
@@ -65,15 +73,21 @@ args.model="VAE"
 VAE= model(args, train, train_n, test, test_faulty)
 #VAE.train_model()
 VAE.reconstruct(train,train_ori ,description="train")
-VAE.reconstruct(test,test_ori, description="test")
+z, x= VAE.reconstruct(test,test_ori, description="test")
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
 VAE.reconstruct(test_faulty,test_ori ,description=args.failure)
 
 args.model="MVAE"
 MVAE= model(args, train, train_n, test, test_faulty)
 #MVAE.train_model()
 MVAE.reconstruct(train,train_ori, description="train")
-MVAE.reconstruct(test, test_ori, description="test")
+z, x= MVAE.reconstruct(test, test_ori, description="test")
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
 MVAE.reconstruct(test_faulty,test_ori ,description=args.failure)
 
+# the contribution could be the use of pca inside an autoencoder
 
+# pca ====> dimention reduction =====> fitting  data to an AE
 

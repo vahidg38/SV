@@ -3,6 +3,8 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 from utils import *
+import optuna
+
 class base_AE(nn.Module):
     def __init__(self):
         super(base_AE, self).__init__()
@@ -27,7 +29,6 @@ class base_AE(nn.Module):
 class MemAE(nn.Module):
     def __init__(self, mem_dim=100, shrink_thres=0.0025):
         super(MemAE, self).__init__()
-
 
         self.encoder = nn.Sequential(
 
@@ -111,14 +112,12 @@ class model():
         self.model_ = None
         self.loss_function = torch.nn.MSELoss()
         self.tr_entropy_loss_func = EntropyLossEncap()
-        self.optimizer =None
+        self.optimizer = None
         self.entropy_loss_weight = 0.0002
         self.mem = False
         self.entropy_loss_weight = 0
-        self.pstart=args.pstart
-        self.pstop=args.pstop
-
-
+        self.pstart = args.pstart
+        self.pstop = args.pstop
 
         print(f"{self.args.model} is selected")
         make_dir(self.args.model)
@@ -166,18 +165,15 @@ class model():
     def train_model(self):
         wait = 0
         epoch_loss = []
-        eot=False # end of training
+        eot = False  # end of training
         for epoch in range(self.args.epochs):
 
             if self.mem:  # if model has memory module plot the elements during training
                 self.plot_memory(self.model_, epoch)
 
-
-
             if (eot == True):
                 break
             losses = 0
-
 
             print(f"epoch: {epoch}")
 
@@ -213,7 +209,7 @@ class model():
             epoch_loss.append(losses / iteration)
             print(f"epoch_{epoch}_loss:  {losses / iteration}")
 
-            if len(epoch_loss)>2:
+            if len(epoch_loss) > 2:
                 if epoch_loss[epoch] > epoch_loss[epoch - 1]:
                     wait = wait + 1
                     if wait > self.args.patience:
@@ -238,43 +234,69 @@ class model():
         plt.title(f"Training loss for {self.args.model}")
         plt.savefig(f'./{self.args.model}/{self.args.model}_loss.png', bbox_inches="tight", pad_inches=0.0)
         plt.clf()
-
-    def reconstruct(self, dataframe,dataframe_ori, description="Reconstruction"):
+        return epoch_loss[-1]
+    def reconstruct(self, dataframe, dataframe_ori, description="Reconstruction"):
 
         model_para = torch.load(f'./{self.args.model}/{self.args.model}_final.pt')
         self.model_.load_state_dict(model_para)
 
-        result=[] # reconstructed values
-        latent=[]
+        result = []  # reconstructed values
+        latent = []
         for i in range(len(dataframe)):
             obs = torch.from_numpy(dataframe.iloc[i + 0:i + 1].to_numpy())
             reconstructed = self.model_(obs.float())
             result.append(reconstructed['output'].detach().numpy()[0])
-            #latent.append(reconstructed['latent'].detach().numpy()[0])
+            # latent.append(reconstructed['latent'].detach().numpy()[0])
 
-        #result= de_normalize_2d(np.array(result),self.norm)
+        # result= de_normalize_2d(np.array(result),self.norm)
 
         df_result = pd.DataFrame(result, columns=self.train.columns)
 
+        df_result = de_normalize(df_result, dataframe_ori)
+        dataframe = de_normalize(dataframe, dataframe_ori)
 
-        df_result =de_normalize(df_result,dataframe_ori)
-        dataframe= de_normalize(dataframe,dataframe_ori)
-
-        if description== self.args.failure:
-            self.pstart= self.args.fstart
-            self.pstop= self.args.fstop
+        if description == self.args.failure:
+            self.pstart = self.args.fstart
+            self.pstop = self.args.fstop
 
         for b in self.train.columns:
-            plt.plot(df_result[b].iloc[self.pstart:self.pstop], linestyle='dotted', color='red', label=f'Reconstructed_{self.args.model}',
+            plt.plot(df_result[b].iloc[self.pstart:self.pstop], linestyle='dotted', color='red',
+                     label=f'Reconstructed_{self.args.model}',
                      marker='.')
 
             plt.plot(dataframe[b].iloc[self.pstart:self.pstop], label='Sensor data', color='blue', marker='.')
 
-            if description== self.args.failure:
+            if description == self.args.failure:
                 plt.plot(dataframe_ori[b].iloc[self.pstart:self.pstop], label='Actual', color='black', marker='.')
 
             plt.legend()
             plt.xlabel(f"{b}")
             plt.title(description)
-            plt.savefig(f'./{self.args.model}/{self.args.model}_{b}_{description}.jpg.png' , bbox_inches="tight", pad_inches=0.0)
+            plt.savefig(f'./{self.args.model}/{self.args.model}_{b}_{description}.jpg.png', bbox_inches="tight",
+                        pad_inches=0.0)
             plt.clf()
+
+        return df_result, dataframe
+
+    def optimization(self):
+
+        study = optuna.create_study(direction="minimize")
+        study.optimize(self.train_model(), n_trials=100)
+
+        pruned_trials = [t for t in study.trials if t.state == optuna.structs.TrialState.PRUNED]
+        complete_trials = [t for t in study.trials if t.state == optuna.structs.TrialState.COMPLETE]
+
+        print("Study statistics: ")
+        print("  Number of finished trials: ", len(study.trials))
+        print("  Number of pruned trials: ", len(pruned_trials))
+        print("  Number of complete trials: ", len(complete_trials))
+
+        print("Best trial:")
+        trial = study.best_trial
+
+        print("  Value: ", trial.value)
+
+        print("  Params: ")
+
+        for key, value in trial.params.items():
+            print("    {}: {}".format(key, value))

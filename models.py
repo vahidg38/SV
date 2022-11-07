@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from utils import *
 import optuna
-
+import torch.optim as optim
 class base_AE(nn.Module):
     def __init__(self):
         super(base_AE, self).__init__()
@@ -20,12 +20,40 @@ class base_AE(nn.Module):
 
         )
 
+
     def forward(self, x):
         f = self.encoder(x)
         output = self.decoder(f)
         return {'output': output, 'latent': f}
 
+class build_base_AE(nn.Module):
+    def __init__(self,trial):
+        super(build_base_AE, self).__init__()
+        n_layers = trial.suggest_int("n_layers", 1, 3)
+        in_features = 5
+        en_layers = []
+        de_layers=[]
+        for i in range(n_layers):
+            out_features = trial.suggest_int("n_units_l{}".format(i), 1, 5)
+            en_layers.append(nn.Linear(in_features, out_features))
+            de_layers.append(nn.Linear(out_features, in_features))
+            en_layers.append(nn.ReLU())
 
+
+
+            in_features = out_features
+        self.encoder= nn.Sequential(*en_layers)
+        print(self.encoder)
+        de_layers=de_layers[:-1] #remove the relu
+        de_layers=de_layers[::-1] #reverse
+
+        self.decoder=nn.Sequential(*de_layers)
+        print(self.decoder)
+
+    def forward(self, x):
+            f = self.encoder(x)
+            output = self.decoder(f)
+            return {'output': output, 'latent': f}
 class MemAE(nn.Module):
     def __init__(self, mem_dim=100, shrink_thres=0.0025):
         super(MemAE, self).__init__()
@@ -234,6 +262,109 @@ class model():
         plt.title(f"Training loss for {self.args.model}")
         plt.savefig(f'./{self.args.model}/{self.args.model}_loss.png', bbox_inches="tight", pad_inches=0.0)
         plt.clf()
+
+    def define_model(self,trial):
+        match self.args.model:
+            case "AE":
+                return build_base_AE(trial)
+
+            case "DAE":
+                return build_base_AE(trial)
+
+
+            case "MAE":
+                self.model_ = MemAE(mem_dim=self.args.memdim, shrink_thres=0.0025)
+
+
+            case "VAE":
+                encoder = Encoder(input_dim=5, hidden_dim=3, latent_dim=2)
+                decoder = Decoder(latent_dim=2, hidden_dim=3, output_dim=5)
+                self.model_ = VAE(Encoder=encoder, Decoder=decoder)
+
+
+            case "MVAE":
+                encoder = Encoder(input_dim=5, hidden_dim=3, latent_dim=2)
+                decoder = Decoder(latent_dim=2, hidden_dim=3, output_dim=5)
+                self.model_ = MVAE(Encoder=encoder, Decoder=decoder, mem_dim=self.args.memdim, shrink_thres=0.0025)
+
+
+
+    def objective(self,trial):
+
+        optimizer_name = trial.suggest_categorical("optimizer", ["Adam", "RMSprop", "SGD"])
+        lr = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
+        self.optimizer = getattr(optim, optimizer_name)(self.model_.parameters(), lr=lr)
+        model=self.define_model(trial)
+        wait = 0
+        epoch_loss = []
+        eot = False  # end of training
+        for epoch in range(10):
+
+
+
+            if (eot == True):
+                break
+            losses = 0
+
+            print(f"epoch: {epoch}")
+
+            iteration = len(self.train) // self.args.batch
+            for i in range(iteration):
+                # latent_mae=[]
+                # outputs = []
+
+                obs = torch.from_numpy(self.train.iloc[i * self.args.batch:(i + 1) * self.args.batch].to_numpy())
+
+                reconstructed = model(obs.float())
+                #  print("obs")
+                #  print(obs)
+                # print("rec")
+                # print(reconstructed['output'][0])
+
+                # print(att_w)
+                loss = self.loss_function(reconstructed['output'], obs.float())
+
+                if self.mem:
+                    att_w = reconstructed['att']
+                    entropy_loss = self.tr_entropy_loss_func(att_w)
+                    loss = loss + self.entropy_loss_weight * entropy_loss
+
+                loss_val = loss.item()
+
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+
+                losses = losses + loss_val
+
+            epoch_loss.append(losses / iteration)
+            print(f"epoch_{epoch}_loss:  {losses / iteration}")
+
+            if len(epoch_loss) > 2:
+                if epoch_loss[epoch] > epoch_loss[epoch - 1]:
+                    wait = wait + 1
+                    if wait > self.args.patience:
+                        print("End of training")
+                        eot = True
+                        torch.save(self.model_.state_dict(), f'./{self.args.model}/{self.args.model}_final.pt')
+                        print("early stopping")
+
+                else:
+                    wait = 0
+
+            if (epoch == self.args.epochs - 1):
+                torch.save(self.model_.state_dict(), f'./{self.args.model}/{self.args.model}_final.pt')
+
+            if (epoch % 50 == 0):
+                torch.save(self.model_.state_dict(), f'./{self.args.model}/{self.args.model}_snap.pt')
+
+        plt.plot(epoch_loss)
+        print(epoch_loss)
+        plt.ylabel("Loss")
+        plt.xlabel("Epoch")
+        plt.title(f"Training loss for {self.args.model}")
+        plt.savefig(f'./{self.args.model}/{self.args.model}_loss.png', bbox_inches="tight", pad_inches=0.0)
+        plt.clf()
         return epoch_loss[-1]
     def reconstruct(self, dataframe, dataframe_ori, description="Reconstruction"):
 
@@ -279,9 +410,9 @@ class model():
         return df_result, dataframe
 
     def optimization(self):
-
+        print(f"Optimizing {self.args.model}")
         study = optuna.create_study(direction="minimize")
-        study.optimize(self.train_model(), n_trials=100)
+        study.optimize(self.objective, n_trials=100)
 
         pruned_trials = [t for t in study.trials if t.state == optuna.structs.TrialState.PRUNED]
         complete_trials = [t for t in study.trials if t.state == optuna.structs.TrialState.COMPLETE]

@@ -4,19 +4,20 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from utils import *
 import optuna
+from optuna.trial import TrialState
 import torch.optim as optim
 class base_AE(nn.Module):
     def __init__(self):
         super(base_AE, self).__init__()
 
         self.encoder = nn.Sequential(
-            nn.Linear(5, 2),
+            nn.Linear(5, 5),
             torch.nn.ReLU()
 
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(2, 5)
+            nn.Linear(5, 5)
 
         )
 
@@ -55,18 +56,18 @@ class build_base_AE(nn.Module):
             output = self.decoder(f)
             return {'output': output, 'latent': f}
 class MemAE(nn.Module):
-    def __init__(self, mem_dim=100, shrink_thres=0.0025):
+    def __init__(self, mem_dim=149, shrink_thres=0.0025):
         super(MemAE, self).__init__()
 
         self.encoder = nn.Sequential(
 
-            nn.Linear(5, 2),
+            nn.Linear(5, 5),
             torch.nn.ReLU()
 
         )
-        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=2, shrink_thres=shrink_thres)
+        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=5, shrink_thres=shrink_thres)
         self.decoder = nn.Sequential(
-            nn.Linear(2, 5)
+            nn.Linear(5, 5)
 
         )
 
@@ -102,7 +103,7 @@ class build_MemAE(nn.Module):
         self.decoder = nn.Sequential(*de_layers)
         print(self.decoder)
 
-        mem_dim=trial.suggest_int("n_units_l{}".format(i), 50, 350)
+        mem_dim=trial.suggest_int("n_units_l_{}".format(i), 50, 350)
         self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim= out_features, shrink_thres=0.0025)
         print(self.mem_rep)
 
@@ -141,7 +142,7 @@ class MVAE(nn.Module):
         super(MVAE, self).__init__()
         self.Encoder = Encoder
         self.Decoder = Decoder
-        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=2, shrink_thres=shrink_thres)
+        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=5, shrink_thres=shrink_thres)
 
     def reparameterization(self, mean, var):
         epsilon = torch.randn_like(var)  # sampling epsilon
@@ -204,14 +205,14 @@ class model():
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
 
             case "VAE":
-                encoder = Encoder(input_dim=5, hidden_dim=3, latent_dim=2)
-                decoder = Decoder(latent_dim=2, hidden_dim=3, output_dim=5)
+                encoder = Encoder(input_dim=5, hidden_dim=5, latent_dim=5)
+                decoder = Decoder(latent_dim=5, hidden_dim=5, output_dim=5)
                 self.model_ = VAE(Encoder=encoder, Decoder=decoder)
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
 
             case "MVAE":
-                encoder = Encoder(input_dim=5, hidden_dim=3, latent_dim=2)
-                decoder = Decoder(latent_dim=2, hidden_dim=3, output_dim=5)
+                encoder = Encoder(input_dim=5, hidden_dim=5, latent_dim=5)
+                decoder = Decoder(latent_dim=5, hidden_dim=5, output_dim=5)
                 self.model_ = MVAE(Encoder=encoder, Decoder=decoder, mem_dim=self.args.memdim, shrink_thres=0.0025)
                 self.entropy_loss_weight = 0.0002
                 self.mem = True
@@ -448,8 +449,8 @@ class model():
         study = optuna.create_study(direction="minimize")
         study.optimize(self.objective, n_trials=100)
 
-        pruned_trials = [t for t in study.trials if t.state == optuna.structs.TrialState.PRUNED]
-        complete_trials = [t for t in study.trials if t.state == optuna.structs.TrialState.COMPLETE]
+        pruned_trials = [t for t in study.trials if t.state == TrialState.PRUNED]
+        complete_trials = [t for t in study.trials if t.state == TrialState.COMPLETE]
 
         print("Study statistics: ")
         print("  Number of finished trials: ", len(study.trials))

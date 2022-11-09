@@ -41,7 +41,7 @@ test_faulty= fault_generation(test.copy(), type=args.failure, sensor=args.fsenso
 
 args.model="MAE"
 MAE= model(args, train, train_n, test, test_faulty)
-MAE.optimization()
+#MAE.optimization()
 #MAE.train_model()
 MAE.reconstruct(train,train_ori, description="train")
 z, x= MAE.reconstruct(test,test_ori ,description="test")
@@ -51,7 +51,7 @@ MAE.reconstruct(test_faulty,test_ori ,description=args.failure)
 
 args.model="AE"
 AE= model(args, train, train_n, test, test_faulty)
-AE.optimization()
+#AE.optimization()
 #AE.train_model()
 AE.reconstruct(train,train_ori, description="train")
 z, x= AE.reconstruct(test, test_ori, description="test")
@@ -63,6 +63,7 @@ AE.reconstruct(test_faulty,test_ori ,description=args.failure)
 
 args.model="DAE" 
 DAE= model(args, train, train_n, test, test_faulty)
+#DAE.optimization()
 #DAE.train_model()
 DAE.reconstruct(train,train_ori, description="train")
 z, x= DAE.reconstruct(test,test_ori, description="test")

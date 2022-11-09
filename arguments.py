@@ -8,7 +8,7 @@ def get_args():
     parser.add_argument('-bs', '--batch', type=int, default=1,
                         help='Number of samples that will be propagated through the network')
 
-    parser.add_argument('-e', '--epochs', type=int, default=10,
+    parser.add_argument('-e', '--epochs', type=int, default=400,
                         help='max num of epochs')
 
     parser.add_argument('-pt', '--patience', type=int, default=5,
@@ -17,7 +17,7 @@ def get_args():
     parser.add_argument('-pa', '--path', type=str, default='IAQ_2month_Vah.mat',
                         help='data path')
 
-    parser.add_argument('-md', '--memdim', type=int, default=200,
+    parser.add_argument('-md', '--memdim', type=int, default=149,
                         help='memory dimension')
 
     parser.add_argument('-mo', '--model', type=str, default='AE',

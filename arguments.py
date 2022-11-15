@@ -5,7 +5,7 @@ def get_args():
     parser = argparse.ArgumentParser(description="Autoencoders for data reconstruction",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('-bs', '--batch', type=int, default=1,
+    parser.add_argument('-bs', '--batch', type=int, default=16,
                         help='Number of samples that will be propagated through the network')
 
     parser.add_argument('-e', '--epochs', type=int, default=400,
@@ -38,7 +38,7 @@ def get_args():
     parser.add_argument('-psto', '--pstop', type=int, default=700,
                         help='plot stop point')
 
-    parser.add_argument('-fsta', '--fstart', type=int, default=0,
+    parser.add_argument('-fsta', '--fstart', type=int, default=100,
                         help='Fault period start point')
 
     parser.add_argument('-fsto', '--fstop', type=int, default=200,

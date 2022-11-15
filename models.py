@@ -27,6 +27,27 @@ class base_AE(nn.Module):
         output = self.decoder(f)
         return {'output': output, 'latent': f}
 
+class base_AE_with_err (nn.Module):
+    def __init__(self):
+        super(base_AE, self).__init__()
+
+        self.encoder = nn.Sequential(
+            nn.Linear(6, 5),
+            torch.nn.ReLU()
+
+        )
+
+        self.decoder = nn.Sequential(
+            nn.Linear(5, 6)
+
+        )
+
+
+    def forward(self, x):
+        f = self.encoder(x)
+        output = self.decoder(f)
+        return {'output': output, 'latent': f}
+
 class build_base_AE(nn.Module):
     def __init__(self,trial):
         super(build_base_AE, self).__init__()
@@ -123,7 +144,8 @@ class VAE(nn.Module):
         super(VAE, self).__init__()
         self.Encoder = Encoder
         self.Decoder = Decoder
-
+        print(self.Encoder)
+        print(self.Decoder)
     def reparameterization(self, mean, var):
         epsilon = torch.randn_like(var)  # sampling epsilon
         z = mean + var * epsilon  # reparameterization trick
@@ -138,12 +160,13 @@ class VAE(nn.Module):
 
 
 class MVAE(nn.Module):
-    def __init__(self, Encoder, Decoder, mem_dim=100, shrink_thres=0.0025):
+    def __init__(self, Encoder, Decoder, mem_dim=100,fe_dim=5, shrink_thres=0.0025):
         super(MVAE, self).__init__()
         self.Encoder = Encoder
         self.Decoder = Decoder
-        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=5, shrink_thres=shrink_thres)
-
+        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=fe_dim, shrink_thres=shrink_thres)
+        print(self.Encoder)
+        print(self.Decoder)
     def reparameterization(self, mean, var):
         epsilon = torch.randn_like(var)  # sampling epsilon
         z = mean + var * epsilon  # reparameterization trick
@@ -316,24 +339,30 @@ class model():
 
 
             case "VAE":
-                pass
+
+                hidden_dim = trial.suggest_int("hidden_dim", 3, 5)
+                latent_dim = trial.suggest_int("latent_dim", 3, 5)
+                return VAE(build_Encoder(5,hidden_dim,latent_dim),build_Decoder(latent_dim,hidden_dim,5))
 
 
             case "MVAE":
-                pass
+                hidden_dim = trial.suggest_int("hidden_dim", 3, 5)
+                latent_dim = trial.suggest_int("latent_dim", 3, 5)
+                mem_dim = trial.suggest_int("mem_dim", 40, 300)
+                return MVAE(build_Encoder(5, hidden_dim, latent_dim), build_Decoder(latent_dim,hidden_dim,5),mem_dim,fe_dim=latent_dim, shrink_thres=0.0025)
 
 
 
     def objective(self,trial):
 
-        optimizer_name = trial.suggest_categorical("optimizer", ["Adam", "RMSprop", "SGD"])
-        lr = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
+        optimizer_name = trial.suggest_categorical("optimizer", ["Adam"])
+        lr = trial.suggest_float("lr", 1e-5, 1e-3, log=True)
         self.optimizer = getattr(optim, optimizer_name)(self.model_.parameters(), lr=lr)
         model=self.define_model(trial)
         wait = 0
         epoch_loss = []
         eot = False  # end of training
-        for epoch in range(10):
+        for epoch in range(15):
 
 
 
@@ -405,19 +434,21 @@ class model():
 
         model_para = torch.load(f'./{self.args.model}/{self.args.model}_final.pt')
         self.model_.load_state_dict(model_para)
-
+        print(self.model_)
         result = []  # reconstructed values
-        latent = []
+        errs = []
         for i in range(len(dataframe)):
             obs = torch.from_numpy(dataframe.iloc[i + 0:i + 1].to_numpy())
             reconstructed = self.model_(obs.float())
             result.append(reconstructed['output'].detach().numpy()[0])
             # latent.append(reconstructed['latent'].detach().numpy()[0])
-
+            err= obs.float()-result[-1]
+            errs.append(err.detach().numpy())
         # result= de_normalize_2d(np.array(result),self.norm)
 
         df_result = pd.DataFrame(result, columns=self.train.columns)
-
+        df_result_with_err= df_result.copy()
+        df_result_with_err['error']= errs
         df_result = de_normalize(df_result, dataframe_ori)
         dataframe = de_normalize(dataframe, dataframe_ori)
 
@@ -442,12 +473,12 @@ class model():
                         pad_inches=0.0)
             plt.clf()
 
-        return df_result, dataframe
+        return df_result, dataframe, df_result_with_err
 
     def optimization(self): #https://github.com/optuna/optuna-examples/blob/main/pytorch/pytorch_simple.py
         print(f"Optimizing {self.args.model}")
         study = optuna.create_study(direction="minimize")
-        study.optimize(self.objective, n_trials=100)
+        study.optimize(self.objective, n_trials=200)
 
         pruned_trials = [t for t in study.trials if t.state == TrialState.PRUNED]
         complete_trials = [t for t in study.trials if t.state == TrialState.COMPLETE]

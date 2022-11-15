@@ -38,16 +38,29 @@ test_faulty= fault_generation(test.copy(), type=args.failure, sensor=args.fsenso
 
 
 
-
+#
 args.model="MAE"
 MAE= model(args, train, train_n, test, test_faulty)
 #MAE.optimization()
 #MAE.train_model()
 MAE.reconstruct(train,train_ori, description="train")
-z, x= MAE.reconstruct(test,test_ori ,description="test")
+z, x,e= MAE.reconstruct(test,test_ori ,description="test")
 print(f"MSE for {args.model}:  {MSE(z,x)}")
 print(f"RR for {args.model}:  {RR(z,x)}")
-MAE.reconstruct(test_faulty,test_ori ,description=args.failure)
+z, x, ee=MAE.reconstruct(test_faulty,test_ori ,description=args.failure)
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
+
+#for i in range(len(e["error"])//10):
+#for i in range(args.pstart,args.pstop):
+for i in range(args.fstart-10, args.fstart+10):
+    print(i)
+    print(f"error: {np.sum(ee['error'][i][0])}")
+    print(f"recons: {z.values[i]}")
+    print(f" Input: {x.values[i]}")
+    print("###############################")
+
+
 
 args.model="AE"
 AE= model(args, train, train_n, test, test_faulty)
@@ -57,11 +70,12 @@ AE.reconstruct(train,train_ori, description="train")
 z, x= AE.reconstruct(test, test_ori, description="test")
 print(f"MSE for {args.model}:  {MSE(z,x)}")
 print(f"RR for {args.model}:  {RR(z,x)}")
-AE.reconstruct(test_faulty,test_ori ,description=args.failure)
+z,x=AE.reconstruct(test_faulty,test_ori ,description=args.failure)
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
 
 
-
-args.model="DAE" 
+args.model="DAE"
 DAE= model(args, train, train_n, test, test_faulty)
 #DAE.optimization()
 #DAE.train_model()
@@ -69,28 +83,33 @@ DAE.reconstruct(train,train_ori, description="train")
 z, x= DAE.reconstruct(test,test_ori, description="test")
 print(f"MSE for {args.model}:  {MSE(z,x)}")
 print(f"RR for {args.model}:  {RR(z,x)}")
-DAE.reconstruct(test_faulty,test_ori ,description=args.failure)
-
+z,x=DAE.reconstruct(test_faulty,test_ori ,description=args.failure)
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
 
 args.model="VAE"
 VAE= model(args, train, train_n, test, test_faulty)
+#VAE.optimization()
 #VAE.train_model()
 VAE.reconstruct(train,train_ori ,description="train")
 z, x= VAE.reconstruct(test,test_ori, description="test")
 print(f"MSE for {args.model}:  {MSE(z,x)}")
 print(f"RR for {args.model}:  {RR(z,x)}")
-VAE.reconstruct(test_faulty,test_ori ,description=args.failure)
+z,x=VAE.reconstruct(test_faulty,test_ori ,description=args.failure)
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
 
 args.model="MVAE"
 MVAE= model(args, train, train_n, test, test_faulty)
+#MVAE.optimization()
 #MVAE.train_model()
 MVAE.reconstruct(train,train_ori, description="train")
 z, x= MVAE.reconstruct(test, test_ori, description="test")
 print(f"MSE for {args.model}:  {MSE(z,x)}")
 print(f"RR for {args.model}:  {RR(z,x)}")
-MVAE.reconstruct(test_faulty,test_ori ,description=args.failure)
+z,x=MVAE.reconstruct(test_faulty,test_ori ,description=args.failure)
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
 
-# the contribution could be the use of pca inside an autoencoder
 
-# pca ====> dimention reduction =====> fitting  data to an AE
 

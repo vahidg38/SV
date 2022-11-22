@@ -6,6 +6,8 @@ from utils import *
 import optuna
 from optuna.trial import TrialState
 import torch.optim as optim
+from torch.utils.tensorboard import SummaryWriter
+
 class base_AE(nn.Module):
     def __init__(self):
         super(base_AE, self).__init__()
@@ -193,7 +195,6 @@ def make_dir(model):
 class model():
 
     def __init__(self, args, train, train_n, test, test_faulty):
-
         self.args = args
         self.train = train
         self.train_n = train_n
@@ -253,6 +254,8 @@ class model():
         plt.clf()
 
     def train_model(self):
+        writer = SummaryWriter(f'runs/{self.args.model}')
+
         wait = 0
         epoch_loss = []
         eot = False  # end of training
@@ -265,7 +268,7 @@ class model():
                 break
             losses = 0
 
-            print(f"epoch: {epoch}")
+            #print(f"epoch: {epoch}")
 
             iteration = len(self.train) // self.args.batch
             for i in range(iteration):
@@ -274,6 +277,7 @@ class model():
 
                 obs = torch.from_numpy(self.train.iloc[i * self.args.batch:(i + 1) * self.args.batch].to_numpy())
 
+                #writer.add_graph(self.model_, obs.float(), use_strict_trace=False)
                 reconstructed = self.model_(obs.float())
                 #  print("obs")
                 #  print(obs)
@@ -297,7 +301,8 @@ class model():
                 losses = losses + loss_val
 
             epoch_loss.append(losses / iteration)
-            print(f"epoch_{epoch}_loss:  {losses / iteration}")
+            #print(f"epoch_{epoch}_loss:  {losses / iteration}")
+            writer.add_scalar("Loss/train", losses / iteration, epoch)
 
             if len(epoch_loss) > 2:
                 if epoch_loss[epoch] > epoch_loss[epoch - 1]:
@@ -325,6 +330,11 @@ class model():
         plt.savefig(f'./{self.args.model}/{self.args.model}_loss.png', bbox_inches="tight", pad_inches=0.0)
         plt.clf()
 
+        # obs = torch.from_numpy(self.train.to_numpy()[0])
+        # print(obs)
+        # writer.add_graph(MemAE(),obs.float(),use_strict_trace=False)
+        # writer.close()
+        writer.flush()
     def define_model(self,trial):
         match self.args.model:
             case "AE":

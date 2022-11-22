@@ -5,10 +5,10 @@ def get_args():
     parser = argparse.ArgumentParser(description="Autoencoders for data reconstruction",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('-bs', '--batch', type=int, default=16,
+    parser.add_argument('-bs', '--batch', type=int, default=128,
                         help='Number of samples that will be propagated through the network')
 
-    parser.add_argument('-e', '--epochs', type=int, default=400,
+    parser.add_argument('-e', '--epochs', type=int, default=50,
                         help='max num of epochs')
 
     parser.add_argument('-pt', '--patience', type=int, default=5,

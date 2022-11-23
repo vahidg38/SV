@@ -47,30 +47,31 @@ test_faulty= fault_generation(test.copy(), type=args.failure, sensor=args.fsenso
 
 args.model="integrated"
 integrated_model= model(args, train, train_n, test, test_faulty)
-#integrated_model.train_model()
+integrated_model.train_model()
 integrated_model.reconstruct(train,train_ori, description="train")
 z, x,e=integrated_model.reconstruct(test,test_ori ,description="test")
 print(f"MSE for {args.model}:  {MSE(z,x)}")
 print(f"RR for {args.model}:  {RR(z,x)}")
 print(f"MAE for {args.model}:  {MAE(z,x)}")
 print(f"MAPE for {args.model}:  {MAPE(z,x)}")
-#
-# args.model="MAE"
-# MeAE= model(args, train, train_n, test, test_faulty)
-# #MAE.optimization()
-# MeAE.train_model()
-# MeAE.reconstruct(train,train_ori, description="train")
-# z, x,e= MeAE.reconstruct(test,test_ori ,description="test")
+
+
+args.model="MAE"
+MeAE= model(args, train, train_n, test, test_faulty)
+#MAE.optimization()
+MeAE.train_model()
+MeAE.reconstruct(train,train_ori, description="train")
+z, x,e= MeAE.reconstruct(test,test_ori ,description="test")
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
+print(f"MAE for {args.model}:  {MAE(z,x)}")
+print(f"MAPE for {args.model}:  {MAPE(z,x)}")
+# z, x, ee=MeAE.reconstruct(test_faulty,test_ori ,description=args.failure)
 # print(f"MSE for {args.model}:  {MSE(z,x)}")
 # print(f"RR for {args.model}:  {RR(z,x)}")
-# print(f"MAE for {args.model}:  {MAE(z,x)}")
-# print(f"MAPE for {args.model}:  {MAPE(z,x)}")
-#z, x, ee=MeAE.reconstruct(test_faulty,test_ori ,description=args.failure)
-#print(f"MSE for {args.model}:  {MSE(z,x)}")
-#print(f"RR for {args.model}:  {RR(z,x)}")
 
-#for i in range(len(e["error"])//10):
-#for i in range(args.pstart,args.pstop):
+# for i in range(len(e["error"])//10):
+# for i in range(args.pstart,args.pstop):
 # for i in range(args.fstart-10, args.fstart+10):
 #     print(i)
 #     print(f"error sum: {np.sum(np.absolute(ee['error'][i][0]))}")
@@ -78,67 +79,67 @@ print(f"MAPE for {args.model}:  {MAPE(z,x)}")
 #     print(f"recons: {z.values[i]}")
 #     print(f" Input: {x.values[i]}")
 #     print("###############################")
+#
 
 
 
-#
-#
-# args.model="AE"
-# AE= model(args, train, train_n, test, test_faulty)
-# #AE.optimization()
-# AE.train_model()
-# AE.reconstruct(train,train_ori, description="train")
-# z, x,e= AE.reconstruct(test, test_ori, description="test")
+
+args.model="AE"
+AE= model(args, train, train_n, test, test_faulty)
+#AE.optimization()
+AE.train_model()
+AE.reconstruct(train,train_ori, description="train")
+z, x,e= AE.reconstruct(test, test_ori, description="test")
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
+print(f"MAE for {args.model}:  {MAE(z,x)}")
+print(f"MAPE for {args.model}:  {MAPE(z,x)}")
+# z,x,e=AE.reconstruct(test_faulty,test_ori ,description=args.failure)
 # print(f"MSE for {args.model}:  {MSE(z,x)}")
 # print(f"RR for {args.model}:  {RR(z,x)}")
-# print(f"MAE for {args.model}:  {MAE(z,x)}")
-# print(f"MAPE for {args.model}:  {MAPE(z,x)}")
-# # z,x,e=AE.reconstruct(test_faulty,test_ori ,description=args.failure)
-# # print(f"MSE for {args.model}:  {MSE(z,x)}")
-# # print(f"RR for {args.model}:  {RR(z,x)}")
-#
-#
-# args.model="DAE"
-# DAE= model(args, train, train_n, test, test_faulty)
-# #DAE.optimization()
-# DAE.train_model()
-# DAE.reconstruct(train,train_ori, description="train")
-# z, x,e= DAE.reconstruct(test,test_ori, description="test")
+
+
+args.model="DAE"
+DAE= model(args, train, train_n, test, test_faulty)
+#DAE.optimization()
+DAE.train_model()
+DAE.reconstruct(train,train_ori, description="train")
+z, x,e= DAE.reconstruct(test,test_ori, description="test")
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
+print(f"MAE for {args.model}:  {MAE(z,x)}")
+print(f"MAPE for {args.model}:  {MAPE(z,x)}")
+# z,x,e=DAE.reconstruct(test_faulty,test_ori ,description=args.failure)
 # print(f"MSE for {args.model}:  {MSE(z,x)}")
 # print(f"RR for {args.model}:  {RR(z,x)}")
-# print(f"MAE for {args.model}:  {MAE(z,x)}")
-# print(f"MAPE for {args.model}:  {MAPE(z,x)}")
-# # z,x,e=DAE.reconstruct(test_faulty,test_ori ,description=args.failure)
-# # print(f"MSE for {args.model}:  {MSE(z,x)}")
-# # print(f"RR for {args.model}:  {RR(z,x)}")
-#
-# args.model="VAE"
-# VAE= model(args, train, train_n, test, test_faulty)
-# #VAE.optimization()
-# VAE.train_model()
-# VAE.reconstruct(train,train_ori ,description="train")
-# z, x,e= VAE.reconstruct(test,test_ori, description="test")
+
+args.model="VAE"
+VAE= model(args, train, train_n, test, test_faulty)
+#VAE.optimization()
+VAE.train_model()
+VAE.reconstruct(train,train_ori ,description="train")
+z, x,e= VAE.reconstruct(test,test_ori, description="test")
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
+print(f"MAE for {args.model}:  {MAE(z,x)}")
+print(f"MAPE for {args.model}:  {MAPE(z,x)}")
+# z,x,e=VAE.reconstruct(test_faulty,test_ori ,description=args.failure)
 # print(f"MSE for {args.model}:  {MSE(z,x)}")
 # print(f"RR for {args.model}:  {RR(z,x)}")
-# print(f"MAE for {args.model}:  {MAE(z,x)}")
-# print(f"MAPE for {args.model}:  {MAPE(z,x)}")
-# # z,x,e=VAE.reconstruct(test_faulty,test_ori ,description=args.failure)
-# # print(f"MSE for {args.model}:  {MSE(z,x)}")
-# # print(f"RR for {args.model}:  {RR(z,x)}")
-#
-# args.model="MVAE"
-# MVAE= model(args, train, train_n, test, test_faulty)
-# #MVAE.optimization()
-# MVAE.train_model()
-# MVAE.reconstruct(train,train_ori, description="train")
-# z, x,e= MVAE.reconstruct(test, test_ori, description="test")
+
+args.model="MVAE"
+MVAE= model(args, train, train_n, test, test_faulty)
+#MVAE.optimization()
+MVAE.train_model()
+MVAE.reconstruct(train,train_ori, description="train")
+z, x,e= MVAE.reconstruct(test, test_ori, description="test")
+print(f"MSE for {args.model}:  {MSE(z,x)}")
+print(f"RR for {args.model}:  {RR(z,x)}")
+print(f"MAE for {args.model}:  {MAE(z,x)}")
+print(f"MAPE for {args.model}:  {MAPE(z,x)}")
+# z,x,e=MVAE.reconstruct(test_faulty,test_ori ,description=args.failure)
 # print(f"MSE for {args.model}:  {MSE(z,x)}")
 # print(f"RR for {args.model}:  {RR(z,x)}")
-# print(f"MAE for {args.model}:  {MAE(z,x)}")
-# print(f"MAPE for {args.model}:  {MAPE(z,x)}")
-# # z,x,e=MVAE.reconstruct(test_faulty,test_ori ,description=args.failure)
-# # print(f"MSE for {args.model}:  {MSE(z,x)}")
-# # print(f"RR for {args.model}:  {RR(z,x)}")
-#
-#
-#
+
+
+

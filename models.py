@@ -13,13 +13,13 @@ class base_AE(nn.Module):
         super(base_AE, self).__init__()
 
         self.encoder = nn.Sequential(
-            nn.Linear(5, 5),
+            nn.Linear(5, 4),
             torch.nn.ReLU()
 
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(5, 5)
+            nn.Linear(4, 5)
 
         )
 
@@ -84,13 +84,13 @@ class MemAE(nn.Module):
 
         self.encoder = nn.Sequential(
 
-            nn.Linear(5, 5),
+            nn.Linear(5, 4),
             torch.nn.ReLU()
 
         )
-        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=5, shrink_thres=shrink_thres)
+        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=4, shrink_thres=shrink_thres)
         self.decoder = nn.Sequential(
-            nn.Linear(5, 5)
+            nn.Linear(4, 5)
 
         )
 
@@ -162,7 +162,7 @@ class VAE(nn.Module):
 
 
 class MVAE(nn.Module):
-    def __init__(self, Encoder, Decoder, mem_dim=100,fe_dim=5, shrink_thres=0.0025):
+    def __init__(self, Encoder, Decoder, mem_dim=100,fe_dim=4, shrink_thres=0.0025):
         super(MVAE, self).__init__()
         self.Encoder = Encoder
         self.Decoder = Decoder
@@ -229,21 +229,22 @@ class model():
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
 
             case "VAE":
-                encoder = Encoder(input_dim=5, hidden_dim=5, latent_dim=5)
-                decoder = Decoder(latent_dim=5, hidden_dim=5, output_dim=5)
+                encoder = Encoder(input_dim=5, hidden_dim=4, latent_dim=4)
+                decoder = Decoder(latent_dim=4, hidden_dim=4, output_dim=5)
                 self.model_ = VAE(Encoder=encoder, Decoder=decoder)
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
 
             case "MVAE":
-                encoder = Encoder(input_dim=5, hidden_dim=5, latent_dim=5)
-                decoder = Decoder(latent_dim=5, hidden_dim=5, output_dim=5)
+                encoder = Encoder(input_dim=5, hidden_dim=4, latent_dim=4)
+                decoder = Decoder(latent_dim=4, hidden_dim=4, output_dim=5)
                 self.model_ = MVAE(Encoder=encoder, Decoder=decoder, mem_dim=self.args.memdim, shrink_thres=0.0025)
                 self.entropy_loss_weight = 0.0002
                 self.mem = True
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
             case "integrated":
-                encoder = Encoder(input_dim=5, hidden_dim=5, latent_dim=5)
-                decoder = Decoder(latent_dim=5, hidden_dim=5, output_dim=5)
+                encoder = Encoder(input_dim=5, hidden_dim=4, latent_dim=4)
+                decoder = Decoder(latent_dim=4, hidden_dim=4, output_dim=5)
+                self.train = self.train_n
                 self.model_ = parallel(mem_dim=self.args.memdim, shrink_thres=0.0025,Encoder=encoder, Decoder=decoder)
                 self.entropy_loss_weight = 0.0002
                 self.mem = True
@@ -269,7 +270,8 @@ class model():
         for epoch in range(self.args.epochs):
 
             if self.mem:  # if model has memory module plot the elements during training
-                self.plot_memory(self.model_, epoch)
+                #self.plot_memory(self.model_, epoch)
+                pass
 
             if (eot == True):
                 break
@@ -308,7 +310,7 @@ class model():
                 losses = losses + loss_val
 
             epoch_loss.append(losses / iteration)
-            #print(f"epoch_{epoch}_loss:  {losses / iteration}")
+            print(f"epoch_{epoch}_loss:  {losses / iteration}")
             writer.add_scalar("Loss/train", losses / iteration, epoch)
 
             if len(epoch_loss) > 2:
@@ -343,97 +345,7 @@ class model():
         # writer.close()
         writer.flush()
 
-    def train_pipe(self):
-        writer = SummaryWriter(f'runs/pipe')
 
-        wait = 0
-        epoch_loss = []
-        eot = False  # end of training
-        for epoch in range(self.args.epochs):
-
-            if self.mem:  # if model has memory module plot the elements during training
-                self.plot_memory(self.model_, epoch)
-
-            if (eot == True):
-                break
-            losses = 0
-
-            #print(f"epoch: {epoch}")
-
-            iteration = len(self.train) // self.args.batch
-            for i in range(iteration):
-                # latent_mae=[]
-                # outputs = []
-
-                obs = torch.from_numpy(self.train.iloc[i * self.args.batch:(i + 1) * self.args.batch].to_numpy())
-                print(obs)
-                #writer.add_graph(self.model_, obs.float(), use_strict_trace=False)
-                reconstructed1 = self.model_(obs.float())
-                # reconstructed1= torch.from_numpy(reconstructed1['output'].detach().numpy())
-                # print(reconstructed1.float())
-                m2=MemAE()
-                reconstructed2= m2(obs.float())
-                #reconstructed2= torch.from_numpy(reconstructed2['output'].detach().numpy()).float()
-                m3=base_AE()
-                reconstructed3= m3(obs.float())
-                #reconstructed4= MAE(reconstructed3['output'])
-
-                #  print("obs")
-                #  print(obs)
-                # print("rec")
-                # print(reconstructed['output'][0])
-
-                # print(att_w)
-                loss = self.loss_function(reconstructed1['output'], obs.float())+self.loss_function(reconstructed2['output'], obs.float())+self.loss_function(reconstructed3['output'], obs.float())
-
-                if self.mem:
-                    att_w =0# reconstructed['att']
-                    entropy_loss = self.tr_entropy_loss_func(att_w)
-                    loss = loss + self.entropy_loss_weight * entropy_loss
-
-                loss_val = loss.item()
-
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-
-                losses = losses + loss_val
-
-            epoch_loss.append(losses / iteration)
-            #print(f"epoch_{epoch}_loss:  {losses / iteration}")
-            writer.add_scalar("Loss/train", losses / iteration, epoch)
-
-            if len(epoch_loss) > 2:
-                if epoch_loss[epoch] > epoch_loss[epoch - 1]:
-                    wait = wait + 1
-                    if wait > self.args.patience:
-                        print("End of training")
-                        eot = True
-                        torch.save(self.model_.state_dict(), f'./{self.args.model}/{self.args.model}_final.pt')
-                        print("early stopping")
-
-                else:
-                    wait = 0
-
-            if (epoch == self.args.epochs - 1):
-                torch.save(self.model_.state_dict(), f'./{self.args.model}/{self.args.model}_final.pt')
-
-            if (epoch % 50 == 0):
-                torch.save(self.model_.state_dict(), f'./{self.args.model}/{self.args.model}_snap.pt')
-
-        plt.plot(epoch_loss)
-        print(epoch_loss)
-        plt.ylabel("Loss")
-        plt.xlabel("Epoch")
-        plt.title(f"Training loss for {self.args.model}")
-        plt.savefig(f'./{self.args.model}/{self.args.model}_loss.png', bbox_inches="tight", pad_inches=0.0)
-        plt.clf()
-
-        # obs = torch.from_numpy(self.train.to_numpy()[0])
-        # print(obs)
-        # writer.add_graph(MemAE(),obs.float(),use_strict_trace=False)
-        # writer.close()
-        writer.flush()
     def define_model(self,trial):
         match self.args.model:
             case "AE":

@@ -9,32 +9,32 @@ class parallel(nn.Module):
 
 
         self.AE_encoder = nn.Sequential(
-            nn.Linear(5, 5),
+            nn.Linear(5, 4),
             torch.nn.ReLU()
 
         )
 
-        self.AE_decoder = nn.Sequential(
-            nn.Linear(5, 5)
-
-        )
+        # self.AE_decoder = nn.Sequential(
+        #     nn.Linear(5, 5)
+        #
+        # )
 
         self.MemAE_encoder = nn.Sequential(
 
-            nn.Linear(5, 5),
+            nn.Linear(5, 4),
             torch.nn.ReLU()
 
         )
-        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=5, shrink_thres=shrink_thres)
-        self.MemAE_decoder = nn.Sequential(
-            nn.Linear(5, 5)
-
-        )
+        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=4, shrink_thres=shrink_thres)
+        # self.MemAE_decoder = nn.Sequential(
+        #     nn.Linear(5, 5)
+        #
+        # )
 
         self.VAE_Encoder = Encoder
-        self.VAE_Decoder = Decoder
+        # self.VAE_Decoder = Decoder
 
-        self.g_decoder= nn.Linear(15, 5)
+        self.g_decoder= nn.Linear(12, 5)
 
 
 
@@ -46,19 +46,14 @@ class parallel(nn.Module):
     def forward(self, x):
         f1 = self.AE_encoder(x)
 
-        #output_AE = self.AE_decoder(f)
-
         f2 = self.MemAE_encoder(x)
         res_mem = self.mem_rep (f2)
         f2 = res_mem['output']
         att_MemAE = res_mem['att']
 
-        #output_MemAE = self.MemAE_decoder(f)
 
         mean, log_var = self.VAE_Encoder(x)
         f3 = self.reparameterization(mean, torch.exp(0.5 * log_var))  # takes exponential function (log var -> var)
-
-        #output_VAE = self.VAE_Decoder (z)
 
 
         final_output= self.g_decoder(torch.cat((f1,f2,f3),1))

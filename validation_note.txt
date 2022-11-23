@@ -1,0 +1,3 @@
+https://curiousily.com/posts/time-series-anomaly-detection-using-lstm-autoencoder-with-pytorch-in-python/
+
+https://jakevdp.github.io/PythonDataScienceHandbook/05.13-kernel-density-estimation.html

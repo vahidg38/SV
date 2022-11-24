@@ -464,7 +464,7 @@ class model():
             result.append(reconstructed['output'].detach().numpy()[0])
             # latent.append(reconstructed['latent'].detach().numpy()[0])
             err= obs.float()-result[-1]
-            errs.append(err.detach().numpy())
+            errs.append(err.detach().numpy()[0])
         # result= de_normalize_2d(np.array(result),self.norm)
 
         df_result = pd.DataFrame(result, columns=self.train.columns)
@@ -494,7 +494,7 @@ class model():
                         pad_inches=0.0)
             plt.clf()
 
-        return df_result, dataframe, df_result_with_err
+        return df_result, dataframe, errs #df_result_with_err
 
     def optimization(self): #https://github.com/optuna/optuna-examples/blob/main/pytorch/pytorch_simple.py
         print(f"Optimizing {self.args.model}")

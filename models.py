@@ -13,13 +13,13 @@ class base_AE(nn.Module):
         super(base_AE, self).__init__()
 
         self.encoder = nn.Sequential(
-            nn.Linear(5, 4),
+            nn.Linear(5, 3),
             torch.nn.ReLU()
 
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(4, 5)
+            nn.Linear(3, 5)
 
         )
 
@@ -84,13 +84,13 @@ class MemAE(nn.Module):
 
         self.encoder = nn.Sequential(
 
-            nn.Linear(5, 4),
+            nn.Linear(5, 3),
             torch.nn.ReLU()
 
         )
-        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=4, shrink_thres=shrink_thres)
+        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=3, shrink_thres=shrink_thres)
         self.decoder = nn.Sequential(
-            nn.Linear(4, 5)
+            nn.Linear(3, 5)
 
         )
 
@@ -162,13 +162,15 @@ class VAE(nn.Module):
 
 
 class MVAE(nn.Module):
-    def __init__(self, Encoder, Decoder, mem_dim=100,fe_dim=4, shrink_thres=0.0025):
+    def __init__(self, Encoder, mem_dim=149,fe_dim=3, shrink_thres=0.0025):
         super(MVAE, self).__init__()
         self.Encoder = Encoder
-        self.Decoder = Decoder
+        self.decoder = nn.Sequential  (#using memory autoencoder decoder
+            nn.Linear(3, 5)
+
+        )
         self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=fe_dim, shrink_thres=shrink_thres)
-        print(self.Encoder)
-        print(self.Decoder)
+
     def reparameterization(self, mean, var):
         epsilon = torch.randn_like(var)  # sampling epsilon
         z = mean + var * epsilon  # reparameterization trick
@@ -182,9 +184,8 @@ class MVAE(nn.Module):
         f = res_mem['output']
         att = res_mem['att']
 
-        x_hat = self.Decoder(f)
-
-        return {'output': x_hat, 'att': att, 'latent': f}
+        output = self.decoder(f)
+        return {'output': output, 'att': att, 'latent': f}
 
 
 def make_dir(model):
@@ -229,23 +230,23 @@ class model():
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
 
             case "VAE":
-                encoder = Encoder(input_dim=5, hidden_dim=4, latent_dim=4)
-                decoder = Decoder(latent_dim=4, hidden_dim=4, output_dim=5)
+                encoder = Encoder(input_dim=5, hidden_dim=4, latent_dim=3)
+                decoder = Decoder(latent_dim=3, hidden_dim=4, output_dim=5)
                 self.model_ = VAE(Encoder=encoder, Decoder=decoder)
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
 
             case "MVAE":
-                encoder = Encoder(input_dim=5, hidden_dim=4, latent_dim=4)
-                decoder = Decoder(latent_dim=4, hidden_dim=4, output_dim=5)
-                self.model_ = MVAE(Encoder=encoder, Decoder=decoder, mem_dim=self.args.memdim, shrink_thres=0.0025)
+                encoder = Encoder(input_dim=5, hidden_dim=4, latent_dim=3)
+
+                self.model_ = MVAE(Encoder=encoder, mem_dim=self.args.memdim, shrink_thres=0.0025)
                 self.entropy_loss_weight = 0.0002
                 self.mem = True
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
             case "integrated":
-                encoder = Encoder(input_dim=5, hidden_dim=4, latent_dim=4)
-                decoder = Decoder(latent_dim=4, hidden_dim=4, output_dim=5)
+                encoder = Encoder(input_dim=5, hidden_dim=4, latent_dim=3)
+
                 self.train = self.train_n
-                self.model_ = parallel(mem_dim=self.args.memdim, shrink_thres=0.0025,Encoder=encoder, Decoder=decoder)
+                self.model_ = parallel(mem_dim=self.args.memdim, shrink_thres=0.0025,Encoder=encoder)
                 self.entropy_loss_weight = 0.0002
                 self.mem = True
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
@@ -286,7 +287,7 @@ class model():
 
                 obs = torch.from_numpy(self.train.iloc[i * self.args.batch:(i + 1) * self.args.batch].to_numpy())
 
-                writer.add_graph(self.model_, obs.float(), use_strict_trace=False)
+               # writer.add_graph(self.model_, obs.float(), use_strict_trace=False)
                 reconstructed = self.model_(obs.float())
                 #  print("obs")
                 #  print(obs)

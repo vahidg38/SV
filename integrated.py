@@ -4,12 +4,12 @@ import numpy as np
 
 class parallel(nn.Module):
 
-    def __init__(self,Encoder, Decoder, mem_dim=149, shrink_thres=0.0025):
+    def __init__(self,Encoder,  mem_dim=149, shrink_thres=0.0025):
         super(parallel, self).__init__()
 
 
         self.AE_encoder = nn.Sequential(
-            nn.Linear(5, 4),
+            nn.Linear(5, 3),
             torch.nn.ReLU()
 
         )
@@ -21,11 +21,11 @@ class parallel(nn.Module):
 
         self.MemAE_encoder = nn.Sequential(
 
-            nn.Linear(5, 4),
+            nn.Linear(5, 3),
             torch.nn.ReLU()
 
         )
-        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=4, shrink_thres=shrink_thres)
+        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=3, shrink_thres=shrink_thres)
         # self.MemAE_decoder = nn.Sequential(
         #     nn.Linear(5, 5)
         #
@@ -34,7 +34,7 @@ class parallel(nn.Module):
         self.VAE_Encoder = Encoder
         # self.VAE_Decoder = Decoder
 
-        self.g_decoder= nn.Linear(12, 5)
+        self.g_decoder= nn.Linear(9, 5)
 
 
 

@@ -5,10 +5,10 @@ def get_args():
     parser = argparse.ArgumentParser(description="Autoencoders for data reconstruction",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('-bs', '--batch', type=int, default=1,
+    parser.add_argument('-bs', '--batch', type=int, default=16,
                         help='Number of samples that will be propagated through the network')
 
-    parser.add_argument('-e', '--epochs', type=int, default=2,
+    parser.add_argument('-e', '--epochs', type=int, default=300,
                         help='max num of epochs')
 
     parser.add_argument('-pt', '--patience', type=int, default=5,
@@ -26,7 +26,7 @@ def get_args():
                         ],
                         help=' model selection')
 
-    parser.add_argument('-sf', '--failure', type=str, default='Complete_failure',
+    parser.add_argument('-sf', '--failure', type=str, default='Degradation',
                         choices=[
                             'Bias', 'Complete_failure','Drift', 'Degradation'
                         ],
@@ -38,13 +38,13 @@ def get_args():
     parser.add_argument('-psto', '--pstop', type=int, default=700,
                         help='plot stop point')
 
-    parser.add_argument('-fsta', '--fstart', type=int, default=100,
+    parser.add_argument('-fsta', '--fstart', type=int, default=400,
                         help='Fault period start point')
 
-    parser.add_argument('-fsto', '--fstop', type=int, default=200,
+    parser.add_argument('-fsto', '--fstop', type=int, default=800,
                         help='Fault period stop point')
 
-    parser.add_argument('-fm', '--fmagnitude', type=int, default=0,
+    parser.add_argument('-fm', '--fmagnitude', type=int, default=1,
                         help='Fault magnitude')
 
     parser.add_argument('-fs', '--fsensor', type=str, default='PM25',

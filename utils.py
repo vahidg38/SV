@@ -51,7 +51,8 @@ def fault_generation(df_real, type='bias', sensor='PM25', magnitude=0, start=0, 
     elif (type == 'Degradation'):
         mu, sigma = 0, 0.1
         noise = np.random.normal(mu, sigma, [stop - start, ])
-        faulty += magnitude * noise
+
+        faulty[start:stop] += magnitude * noise
 
     else:
         raise Exception("Inappropriate failure type.")

@@ -184,7 +184,7 @@ class MVAE(nn.Module):
 
         x_hat = self.Decoder(f)
 
-        return {'output': x_hat, 'mean': mean, 'var': log_var, 'att': att, 'latent': f}
+        return {'output': x_hat, 'att': att, 'latent': f}
 
 
 def make_dir(model):
@@ -286,7 +286,7 @@ class model():
 
                 obs = torch.from_numpy(self.train.iloc[i * self.args.batch:(i + 1) * self.args.batch].to_numpy())
 
-                #writer.add_graph(self.model_, obs.float(), use_strict_trace=False)
+                writer.add_graph(self.model_, obs.float(), use_strict_trace=False)
                 reconstructed = self.model_(obs.float())
                 #  print("obs")
                 #  print(obs)

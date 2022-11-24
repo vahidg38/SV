@@ -58,5 +58,5 @@ class parallel(nn.Module):
 
         final_output= self.g_decoder(torch.cat((f1,f2,f3),1))
 
-        return {'output': final_output, 'att': att_MemAE,'latent': (f1,f2,f3)}
+        return {'output': final_output, 'att': att_MemAE}
 

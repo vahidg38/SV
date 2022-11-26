@@ -6,7 +6,7 @@ from models import *
 from arguments import *
 from sklearn.decomposition import PCA
 
-TO_TRAIN=False
+TO_TRAIN=True
 TO_TEST=True
 
 

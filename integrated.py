@@ -34,7 +34,13 @@ class parallel(nn.Module):
         self.VAE_Encoder = Encoder
         # self.VAE_Decoder = Decoder
 
-        self.g_decoder= nn.Linear(9, 5)
+        self.g_decoder=  nn.Sequential(
+
+            nn.Linear(9, 7),
+            torch.nn.ReLU(),
+            nn.Linear(7, 5)
+
+        )
 
 
 

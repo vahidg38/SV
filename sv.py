@@ -9,7 +9,7 @@ from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource, TableColumn, DataTable
 from bokeh.io import show
 
-TO_TRAIN=True
+TO_TRAIN=False
 TO_TEST=True
 
 
@@ -59,7 +59,7 @@ MAPE_=[]
 args.model="integrated"
 integrated_model= model(args, train, train_n, test, test_faulty)
 
-if TO_TRAIN:
+if not TO_TRAIN:
     integrated_model.train_model()
 
 if TO_TEST:

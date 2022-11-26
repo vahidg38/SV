@@ -220,6 +220,7 @@ class model():
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
             case "DAE":
                 self.model_ = base_AE()
+                self.train_or=self.train
                 self.train = self.train_n
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
 
@@ -244,8 +245,8 @@ class model():
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
             case "integrated":
                 encoder = Encoder(input_dim=5, hidden_dim=4, latent_dim=3)
-
-                self.train = self.train_n
+                self.train_or = self.train
+                self.train= self.train_n
                 self.model_ = parallel(mem_dim=self.args.memdim, shrink_thres=0.0025,Encoder=encoder)
                 self.entropy_loss_weight = 0.0002
                 self.mem = True
@@ -293,7 +294,8 @@ class model():
                 #  print(obs)
                 # print("rec")
                 # print(reconstructed['output'][0])
-
+                if self.args.model == 'DAE' or self.args.model == 'integrated':
+                    obs = torch.from_numpy(self.train_or.iloc[i * self.args.batch:(i + 1) * self.args.batch].to_numpy())
                 # print(att_w)
                 loss = self.loss_function(reconstructed['output'], obs.float())
 

@@ -9,7 +9,7 @@ from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource, TableColumn, DataTable
 from bokeh.io import show
 
-TO_TRAIN=False
+TO_TRAIN=True
 TO_TEST=True
 
 

@@ -142,12 +142,14 @@ class build_MemAE(nn.Module):
 
 
 class VAE(nn.Module):
-    def __init__(self, Encoder, Decoder):
+    def __init__(self, Encoder):
         super(VAE, self).__init__()
         self.Encoder = Encoder
-        self.Decoder = Decoder
-        print(self.Encoder)
-        print(self.Decoder)
+        self.decoder = nn.Sequential(
+            nn.Linear(3, 5)
+
+        )
+
     def reparameterization(self, mean, var):
         epsilon = torch.randn_like(var)  # sampling epsilon
         z = mean + var * epsilon  # reparameterization trick
@@ -156,7 +158,7 @@ class VAE(nn.Module):
     def forward(self, x):
         mean, log_var = self.Encoder(x)
         z = self.reparameterization(mean, torch.exp(0.5 * log_var))  # takes exponential function (log var -> var)
-        x_hat = self.Decoder(z)
+        x_hat = self.decoder(z)
 
         return {'output': x_hat, 'mean': mean, 'var': log_var, 'latent': z}
 
@@ -232,8 +234,7 @@ class model():
 
             case "VAE":
                 encoder = Encoder(input_dim=5, hidden_dim=4, latent_dim=3)
-                decoder = Decoder(latent_dim=3, hidden_dim=4, output_dim=5)
-                self.model_ = VAE(Encoder=encoder, Decoder=decoder)
+                self.model_ = VAE(Encoder=encoder)
                 self.optimizer = torch.optim.Adam(self.model_.parameters(), lr=0.0001)
 
             case "MVAE":

@@ -8,7 +8,7 @@ def get_args():
     parser.add_argument('-bs', '--batch', type=int, default=16,
                         help='Number of samples that will be propagated through the network')
 
-    parser.add_argument('-e', '--epochs', type=int, default=20,
+    parser.add_argument('-e', '--epochs', type=int, default=200,
                         help='max num of epochs')
 
     parser.add_argument('-pt', '--patience', type=int, default=5,
@@ -26,7 +26,7 @@ def get_args():
                         ],
                         help=' model selection')
 
-    parser.add_argument('-sf', '--failure', type=str, default='Complete_failure',
+    parser.add_argument('-sf', '--failure', type=str, default='Bias',
                         choices=[
                             'Bias', 'Complete_failure','Drift', 'Degradation'
                         ],
@@ -44,7 +44,7 @@ def get_args():
     parser.add_argument('-fsto', '--fstop', type=int, default=800,
                         help='Fault period stop point')
 
-    parser.add_argument('-fm', '--fmagnitude', type=int, default=1,
+    parser.add_argument('-fm', '--fmagnitude', type=int, default=2,
                         help='Fault magnitude')
 
     parser.add_argument('-fs', '--fsensor', type=str, default='PM25',

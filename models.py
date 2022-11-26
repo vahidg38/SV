@@ -497,7 +497,7 @@ class model():
                         pad_inches=0.0)
             plt.clf()
 
-        return df_result, dataframe, errs #df_result_with_err
+        return df_result.iloc[self.pstart:self.pstop], dataframe.iloc[self.pstart:self.pstop] #, errs #df_result_with_err
 
     def optimization(self): #https://github.com/optuna/optuna-examples/blob/main/pytorch/pytorch_simple.py
         print(f"Optimizing {self.args.model}")

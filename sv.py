@@ -5,6 +5,9 @@ import numpy as np
 from models import *
 from arguments import *
 from sklearn.decomposition import PCA
+from bokeh.plotting import figure
+from bokeh.models import ColumnDataSource, TableColumn, DataTable
+from bokeh.io import show
 
 TO_TRAIN=True
 TO_TEST=True
@@ -48,6 +51,10 @@ test_faulty= fault_generation(test.copy(), type=args.failure, sensor=args.fsenso
 #test_faulty=None
 
 #
+MSE_=[]  # for performance measurement table data
+RR_=[]
+MAE_=[]
+MAPE_=[]
 
 args.model="integrated"
 integrated_model= model(args, train, train_n, test, test_faulty)
@@ -57,29 +64,20 @@ if TO_TRAIN:
 
 if TO_TEST:
 
-    z, x,e=integrated_model.reconstruct(train,train_ori, description="train")
-    z, x,ee=integrated_model.reconstruct(test,test_ori ,description="test")
-    print(f"MSE for {args.model}:  {MSE(z,x)}")
-    print(f"RR for {args.model}:  {RR(z,x)}")
-    print(f"MAE for {args.model}:  {MAE(z,x)}")
-    print(f"MAPE for {args.model}:  {MAPE(z,x)}")
-    z, x, ee = integrated_model.reconstruct(test_faulty, test_ori, description=args.failure)
-    # e = np.array(e)
-    #
-    # print(np.shape(e))
-    #
-    # spe_trn=[]
-    # for i in range(len(e)):
-    #  spe_trn.append(e[i]*e.T[:,i])
-    #
-    #
-    # #spe_trn= np.matmul(e,e.T)
-    #
-    #
-    # print(np.shape(spe_trn))
+    integrated_model.reconstruct(train,train_ori, description="train")
+    integrated_model.reconstruct(test,test_ori ,description="test")
 
+    z, x = integrated_model.reconstruct(test_faulty, test_ori, description=args.failure)
+    print(f"MSE for {args.model}:  {MSE(z, x)}")
+    print(f"RR for {args.model}:  {RR(z, x)}")
+    print(f"MAE for {args.model}:  {MAE(z, x)}")
+    print(f"MAPE for {args.model}:  {MAPE(z, x)}")
 
-#raise Exception("Error!, age should be greater than 18!")
+    MSE_.append(MSE(z, x))
+    RR_.append(RR(z, x))
+    MAE_.append(MAE(z, x))
+    MAPE_.append(MAPE(z, x))
+
 args.model="MAE"
 MeAE= model(args, train, train_n, test, test_faulty)
 #MAE.optimization()
@@ -87,26 +85,18 @@ if TO_TRAIN:
     MeAE.train_model()
 if TO_TEST:
     MeAE.reconstruct(train,train_ori, description="train")
-    z, x,e= MeAE.reconstruct(test,test_ori ,description="test")
+    MeAE.reconstruct(test,test_ori ,description="test")
+
+    z, x=MeAE.reconstruct(test_faulty,test_ori ,description=args.failure)
     print(f"MSE for {args.model}:  {MSE(z,x)}")
     print(f"RR for {args.model}:  {RR(z,x)}")
     print(f"MAE for {args.model}:  {MAE(z,x)}")
     print(f"MAPE for {args.model}:  {MAPE(z,x)}")
-    z, x, ee=MeAE.reconstruct(test_faulty,test_ori ,description=args.failure)
-    # print(f"MSE for {args.model}:  {MSE(z,x)}")
-    # print(f"RR for {args.model}:  {RR(z,x)}")
 
-    # for i in range(len(e["error"])//10):
-    # for i in range(args.pstart,args.pstop):
-    # for i in range(args.fstart-10, args.fstart+10):
-    #     print(i)
-    #     print(f"error sum: {np.sum(np.absolute(ee['error'][i][0]))}")
-    #     print(f"error: {ee['error'][i][0]}")
-    #     print(f"recons: {z.values[i]}")
-    #     print(f" Input: {x.values[i]}")
-    #     print("###############################")
-    #
-
+    MSE_.append(MSE(z, x))
+    RR_.append(RR(z, x))
+    MAE_.append(MAE(z, x))
+    MAPE_.append(MAPE(z, x))
 
 
 
@@ -117,14 +107,18 @@ if TO_TRAIN:
     AE.train_model()
 if TO_TEST:
     AE.reconstruct(train,train_ori, description="train")
-    z, x,e= AE.reconstruct(test, test_ori, description="test")
-    print(f"MSE for {args.model}:  {MSE(z,x)}")
-    print(f"RR for {args.model}:  {RR(z,x)}")
-    print(f"MAE for {args.model}:  {MAE(z,x)}")
-    print(f"MAPE for {args.model}:  {MAPE(z,x)}")
-    z,x,e=AE.reconstruct(test_faulty,test_ori ,description=args.failure)
-    # print(f"MSE for {args.model}:  {MSE(z,x)}")
-    # print(f"RR for {args.model}:  {RR(z,x)}")
+    AE.reconstruct(test, test_ori, description="test")
+
+    z,x=AE.reconstruct(test_faulty,test_ori ,description=args.failure)
+    print(f"MSE for {args.model}:  {MSE(z, x)}")
+    print(f"RR for {args.model}:  {RR(z, x)}")
+    print(f"MAE for {args.model}:  {MAE(z, x)}")
+    print(f"MAPE for {args.model}:  {MAPE(z, x)}")
+
+    MSE_.append(MSE(z, x))
+    RR_.append(RR(z, x))
+    MAE_.append(MAE(z, x))
+    MAPE_.append(MAPE(z, x))
 
 
 args.model="DAE"
@@ -134,15 +128,18 @@ if TO_TRAIN:
     DAE.train_model()
 if TO_TEST:
     DAE.reconstruct(train,train_ori, description="train")
-    z, x,e= DAE.reconstruct(test,test_ori, description="test")
-    print(f"MSE for {args.model}:  {MSE(z,x)}")
-    print(f"RR for {args.model}:  {RR(z,x)}")
-    print(f"MAE for {args.model}:  {MAE(z,x)}")
-    print(f"MAPE for {args.model}:  {MAPE(z,x)}")
-    z,x,e=DAE.reconstruct(test_faulty,test_ori ,description=args.failure)
-    # print(f"MSE for {args.model}:  {MSE(z,x)}")
-    # print(f"RR for {args.model}:  {RR(z,x)}")
+    DAE.reconstruct(test,test_ori, description="test")
 
+    z,x=DAE.reconstruct(test_faulty,test_ori ,description=args.failure)
+    print(f"MSE for {args.model}:  {MSE(z, x)}")
+    print(f"RR for {args.model}:  {RR(z, x)}")
+    print(f"MAE for {args.model}:  {MAE(z, x)}")
+    print(f"MAPE for {args.model}:  {MAPE(z, x)}")
+
+    MSE_.append(MSE(z, x))
+    RR_.append(RR(z, x))
+    MAE_.append(MAE(z, x))
+    MAPE_.append(MAPE(z, x))
 
 args.model="VAE"
 VAE= model(args, train, train_n, test, test_faulty)
@@ -151,14 +148,18 @@ if TO_TRAIN:
     VAE.train_model()
 if TO_TEST:
     VAE.reconstruct(train,train_ori ,description="train")
-    z, x,e= VAE.reconstruct(test,test_ori, description="test")
-    print(f"MSE for {args.model}:  {MSE(z,x)}")
-    print(f"RR for {args.model}:  {RR(z,x)}")
-    print(f"MAE for {args.model}:  {MAE(z,x)}")
-    print(f"MAPE for {args.model}:  {MAPE(z,x)}")
-    z,x,e=VAE.reconstruct(test_faulty,test_ori ,description=args.failure)
-    # print(f"MSE for {args.model}:  {MSE(z,x)}")
-    # print(f"RR for {args.model}:  {RR(z,x)}")
+    VAE.reconstruct(test,test_ori, description="test")
+
+    z,x=VAE.reconstruct(test_faulty,test_ori ,description=args.failure)
+    print(f"MSE for {args.model}:  {MSE(z, x)}")
+    print(f"RR for {args.model}:  {RR(z, x)}")
+    print(f"MAE for {args.model}:  {MAE(z, x)}")
+    print(f"MAPE for {args.model}:  {MAPE(z, x)}")
+
+    MSE_.append(MSE(z, x))
+    RR_.append(RR(z, x))
+    MAE_.append(MAE(z, x))
+    MAPE_.append(MAPE(z, x))
 
 args.model="MVAE"
 MVAE= model(args, train, train_n, test, test_faulty)
@@ -167,14 +168,39 @@ if TO_TRAIN:
     MVAE.train_model()
 if TO_TEST:
     MVAE.reconstruct(train,train_ori, description="train")
-    z, x,e= MVAE.reconstruct(test, test_ori, description="test")
-    print(f"MSE for {args.model}:  {MSE(z,x)}")
-    print(f"RR for {args.model}:  {RR(z,x)}")
-    print(f"MAE for {args.model}:  {MAE(z,x)}")
-    print(f"MAPE for {args.model}:  {MAPE(z,x)}")
-    z,x,e=MVAE.reconstruct(test_faulty,test_ori ,description=args.failure)
-    # print(f"MSE for {args.model}:  {MSE(z,x)}")
-    # print(f"RR for {args.model}:  {RR(z,x)}")
+    MVAE.reconstruct(test, test_ori, description="test")
+
+    z,x=MVAE.reconstruct(test_faulty,test_ori ,description=args.failure)
+    print(f"MSE for {args.model}:  {MSE(z, x)}")
+    print(f"RR for {args.model}:  {RR(z, x)}")
+    print(f"MAE for {args.model}:  {MAE(z, x)}")
+    print(f"MAPE for {args.model}:  {MAPE(z, x)}")
+
+    MSE_.append(MSE(z, x))
+    RR_.append(RR(z, x))
+    MAE_.append(MAE(z, x))
+    MAPE_.append(MAPE(z, x))
+
+if TO_TEST:
+    df = pd.DataFrame({
+        'Models': ['Integrated','MemAE','AE','DAE','VAE','MVAE'],
+        'MSE': MSE_,
+        'RR': RR_,
+        'MAE': MAE_,
+        'MAPE': MAPE_
+    })
 
 
+    source = ColumnDataSource(df)
 
+    columns = [
+        TableColumn(field='Models', title='Models'),
+        TableColumn(field='MSE', title='MSE'),
+        TableColumn(field='RR', title='RR'),
+        TableColumn(field='MAE', title='MAE'),
+        TableColumn(field='MAPE', title='MAPE')
+    ]
+
+    myTable = DataTable(source=source, columns=columns)
+
+    show(myTable)

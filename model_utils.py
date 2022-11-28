@@ -106,6 +106,29 @@ class Encoder(nn.Module):
 
         return mean, log_var
 
+class Encoder_conv(nn.Module):
+
+    def __init__(self, input_dim, hidden_dim, latent_dim):
+        super(Encoder_conv, self).__init__()
+
+        self.FC_input = nn.Conv1d(1, 1,2)
+        self.FC_input2 = nn.Conv1d(1, 1,2)
+        self.FC_mean = nn.Conv1d(1, 1,2)
+        self.FC_var = nn.Conv1d(1, 1,2)
+
+        self.LeakyReLU = nn.LeakyReLU(0.2)
+
+        self.training = True
+
+    def forward(self, x):
+        h_ = self.LeakyReLU(self.FC_input(x))
+        h_ = self.LeakyReLU(self.FC_input2(h_))
+        mean = self.FC_mean(h_)
+        log_var = self.FC_var(h_)  # encoder produces mean and log of variance
+        #             (i.e., parateters of simple tractable normal distribution "q"
+
+        return mean, log_var
+
 class build_Encoder(nn.Module):
 
     def __init__(self, input_dim, hidden_dim, latent_dim):

@@ -9,7 +9,9 @@ class parallel(nn.Module):
 
 
         self.AE_encoder = nn.Sequential(
-            nn.Linear(5, 3),
+            nn.Linear(5, 4),
+            torch.nn.ReLU(),
+            nn.Linear(4, 3),
             torch.nn.ReLU()
 
         )
@@ -21,7 +23,9 @@ class parallel(nn.Module):
 
         self.MemAE_encoder = nn.Sequential(
 
-            nn.Linear(5, 3),
+            nn.Linear(5, 4),
+            torch.nn.ReLU(),
+            nn.Linear(4, 3),
             torch.nn.ReLU()
 
         )

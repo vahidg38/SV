@@ -8,18 +8,23 @@ from optuna.trial import TrialState
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 from integrated import *
+
+#nn.Conv1d with a kernel size of 1 and nn.Linear give essentially the same results
 class base_AE(nn.Module):
     def __init__(self):
         super(base_AE, self).__init__()
 
         self.encoder = nn.Sequential(
-            nn.Linear(5, 3),
+            nn.Linear(5, 4),
+            torch.nn.ReLU(),
+            nn.Linear(4, 3),
             torch.nn.ReLU()
-
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(3, 5)
+            nn.Linear(3, 4),
+            torch.nn.ReLU(),
+            nn.Linear(4, 5)
 
         )
 
@@ -84,13 +89,17 @@ class MemAE(nn.Module):
 
         self.encoder = nn.Sequential(
 
-            nn.Linear(5, 3),
+            nn.Linear(5, 4),
+            torch.nn.ReLU(),
+            nn.Linear(4, 3),
             torch.nn.ReLU()
 
         )
         self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=3, shrink_thres=shrink_thres)
         self.decoder = nn.Sequential(
-            nn.Linear(3, 5)
+            nn.Linear(3, 4),
+            torch.nn.ReLU(),
+            nn.Linear(4, 5)
 
         )
 
@@ -146,7 +155,9 @@ class VAE(nn.Module):
         super(VAE, self).__init__()
         self.Encoder = Encoder
         self.decoder = nn.Sequential(
-            nn.Linear(3, 5)
+            nn.Linear(3, 4),
+            torch.nn.ReLU(),
+            nn.Linear(4, 5)
 
         )
 
@@ -168,7 +179,9 @@ class MVAE(nn.Module):
         super(MVAE, self).__init__()
         self.Encoder = Encoder
         self.decoder = nn.Sequential  (#using memory autoencoder decoder
-            nn.Linear(3, 5)
+            nn.Linear(3, 4),
+            torch.nn.ReLU(),
+            nn.Linear(4, 5)
 
         )
         self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=fe_dim, shrink_thres=shrink_thres)

@@ -3,13 +3,14 @@
 import numpy as np
 
 from models import *
+
 from arguments import *
 from sklearn.decomposition import PCA
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource, TableColumn, DataTable
 from bokeh.io import show
-
-TO_TRAIN=False
+#from ConvolutionalModels import *
+TO_TRAIN=True
 TO_TEST=True
 
 
@@ -59,7 +60,7 @@ MAPE_=[]
 args.model="integrated"
 integrated_model= model(args, train, train_n, test, test_faulty)
 
-if not TO_TRAIN:
+if  TO_TRAIN:
     integrated_model.train_model()
 
 if TO_TEST:

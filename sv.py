@@ -9,9 +9,9 @@ from sklearn.decomposition import PCA
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource, TableColumn, DataTable
 from bokeh.io import show
-#from ConvolutionalModels import *
-TO_TRAIN=True
-TO_TEST=True
+from ConvolutionalModels import *
+TO_TRAIN=False
+TO_TEST=False
 
 
 args = get_args()
@@ -60,10 +60,10 @@ MAPE_=[]
 args.model="integrated"
 integrated_model= model(args, train, train_n, test, test_faulty)
 
-if  TO_TRAIN:
+if   TO_TRAIN:
     integrated_model.train_model()
 
-if TO_TEST:
+if   TO_TEST:
 
     integrated_model.reconstruct(train,train_ori, description="train")
     integrated_model.reconstruct(test,test_ori ,description="test")
@@ -82,9 +82,9 @@ if TO_TEST:
 args.model="MAE"
 MeAE= model(args, train, train_n, test, test_faulty)
 #MAE.optimization()
-if TO_TRAIN:
+if  TO_TRAIN:
     MeAE.train_model()
-if TO_TEST:
+if  TO_TEST:
     MeAE.reconstruct(train,train_ori, description="train")
     MeAE.reconstruct(test,test_ori ,description="test")
 
@@ -104,9 +104,9 @@ if TO_TEST:
 args.model="AE"
 AE= model(args, train, train_n, test, test_faulty)
 #AE.optimization()
-if TO_TRAIN:
+if  TO_TRAIN:
     AE.train_model()
-if TO_TEST:
+if  TO_TEST:
     AE.reconstruct(train,train_ori, description="train")
     AE.reconstruct(test, test_ori, description="test")
 
@@ -145,9 +145,9 @@ if TO_TEST:
 args.model="VAE"
 VAE= model(args, train, train_n, test, test_faulty)
 #VAE.optimization()
-if TO_TRAIN:
+if   TO_TRAIN:
     VAE.train_model()
-if TO_TEST:
+if  TO_TEST:
     VAE.reconstruct(train,train_ori ,description="train")
     VAE.reconstruct(test,test_ori, description="test")
 
@@ -165,9 +165,9 @@ if TO_TEST:
 args.model="MVAE"
 MVAE= model(args, train, train_n, test, test_faulty)
 #MVAE.optimization()
-if TO_TRAIN:
+if  TO_TRAIN:
     MVAE.train_model()
-if TO_TEST:
+if  TO_TEST:
     MVAE.reconstruct(train,train_ori, description="train")
     MVAE.reconstruct(test, test_ori, description="test")
 

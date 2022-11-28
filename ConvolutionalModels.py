@@ -1,5 +1,5 @@
 #https://stackoverflow.com/questions/55576314/conv1d-with-kernel-size-1-vs-linear-layer
-
+import torch.nn
 
 from model_utils import *
 import os
@@ -18,16 +18,16 @@ class base_AE(nn.Module):
         super(base_AE, self).__init__()
 
         self.encoder = nn.Sequential(
-            torch.nn.Conv1d(1, 1, 2),
+            torch.nn.Conv1d(1, 4, 2),
             torch.nn.ReLU(),
-            torch.nn.Conv1d(1, 1, 2),
+            torch.nn.Conv1d(4, 3, 2),
             torch.nn.ReLU()
         )
 
         self.decoder = nn.Sequential(
-            torch.nn.Conv1d(1, 1, 2),
+            torch.nn.ConvTranspose1d(3, 4, 2),
             torch.nn.ReLU(),
-            torch.nn.Conv1d(1, 1, 2)
+            torch.nn.ConvTranspose1d(4, 1, 2)
 
         )
 
@@ -46,18 +46,16 @@ class MemAE(nn.Module):
 
         self.encoder = nn.Sequential(
 
-            torch.nn.Conv1d(1, 1, 2),
+            torch.nn.Conv1d(1, 4, 2),
             torch.nn.ReLU(),
-            torch.nn.Conv1d(1, 1, 2),
+            torch.nn.Conv1d(4, 3, 2),
             torch.nn.ReLU()
-
         )
         self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=3, shrink_thres=shrink_thres)
         self.decoder = nn.Sequential(
-            torch.nn.Conv1d(1, 1, 2),
+            torch.nn.ConvTranspose1d(3, 4, 2),
             torch.nn.ReLU(),
-            torch.nn.Conv1d(1, 1, 2)
-
+            torch.nn.ConvTranspose1d(4, 1, 2)
         )
 
     def forward(self, x):
@@ -74,10 +72,11 @@ class VAE(nn.Module):
         super(VAE, self).__init__()
         self.Encoder = Encoder
         self.decoder = nn.Sequential(
-            torch.nn.Conv1d(1, 1, 2),
+            torch.nn.ConvTranspose1d(3, 4, 2),
             torch.nn.ReLU(),
-            torch.nn.Conv1d(1, 1, 2)
-
+            torch.nn.ConvTranspose1d(4, 1, 2),
+            torch.nn.ReLU(),
+            nn.Linear(4,5)
         )
 
     def reparameterization(self, mean, var):
@@ -98,11 +97,13 @@ class MVAE(nn.Module):
         super(MVAE, self).__init__()
         self.Encoder = Encoder
         self.decoder = nn.Sequential  (#using memory autoencoder decoder
-            torch.nn.Conv1d(1, 1, 2),
+            torch.nn.ConvTranspose1d(3, 4, 2),
             torch.nn.ReLU(),
-            torch.nn.Conv1d(1, 1, 2)
+            torch.nn.ConvTranspose1d(4, 1, 2),
+            torch.nn.ReLU(),
+            nn.Linear(4,5)
         )
-        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=fe_dim, shrink_thres=shrink_thres)
+        self.mem_rep = MemModule(mem_dim=mem_dim, fea_dim=2, shrink_thres=shrink_thres)
 
     def reparameterization(self, mean, var):
         epsilon = torch.randn_like(var)  # sampling epsilon
@@ -229,6 +230,7 @@ class model():
                 if self.args.model == 'DAE' or self.args.model == 'integrated':
                     obs = torch.from_numpy(self.train_or.iloc[i * self.args.batch:(i + 1) * self.args.batch].to_numpy())
                 # print(att_w)
+                #print(reconstructed['output'],obs.float())
                 loss = self.loss_function(reconstructed['output'], obs.float())
 
                 if self.mem:
@@ -466,9 +468,10 @@ class parallel(nn.Module):
 
 
         self.AE_encoder = nn.Sequential(
-            nn.LSTM(input_size=5, hidden_size=4,  batch_first=True),
+
+            torch.nn.Conv1d(1, 4, 2),
             torch.nn.ReLU(),
-            nn.Linear(4, 3),
+            torch.nn.Conv1d(4, 3, 2),
             torch.nn.ReLU()
 
         )
@@ -480,9 +483,10 @@ class parallel(nn.Module):
 
         self.MemAE_encoder = nn.Sequential(
 
-            nn.LSTM(input_size=3, hidden_size=4,  batch_first=True),
+
+            torch.nn.Conv1d(1, 4, 2),
             torch.nn.ReLU(),
-            nn.Linear(4, 5),
+            torch.nn.Conv1d(4, 3, 2),
             torch.nn.ReLU()
 
         )
@@ -497,9 +501,11 @@ class parallel(nn.Module):
 
         self.g_decoder=  nn.Sequential(
 
-            nn.LSTM(input_size=9, hidden_size=7,  batch_first=True),
+            torch.nn.ConvTranspose1d(3, 4, 2),
             torch.nn.ReLU(),
-            nn.Linear(7, 5)
+            torch.nn.ConvTranspose1d(4, 1, 2),
+            torch.nn.ReLU(),
+            nn.Linear(10, 5)
 
         )
 
@@ -522,7 +528,7 @@ class parallel(nn.Module):
         mean, log_var = self.VAE_Encoder(x)
         f3 = self.reparameterization(mean, torch.exp(0.5 * log_var))  # takes exponential function (log var -> var)
 
-
+        # print(torch.cat((f1,f2,f3),1))
         final_output= self.g_decoder(torch.cat((f1,f2,f3),1))
 
         return {'output': final_output, 'att': att_MemAE}

@@ -111,10 +111,10 @@ class Encoder_conv(nn.Module):
     def __init__(self, input_dim, hidden_dim, latent_dim):
         super(Encoder_conv, self).__init__()
 
-        self.FC_input = nn.Conv1d(1, 1,2)
-        self.FC_input2 = nn.Conv1d(1, 1,2)
-        self.FC_mean = nn.Conv1d(1, 1,2)
-        self.FC_var = nn.Conv1d(1, 1,2)
+        self.FC_input = nn.LSTM(input_size=input_dim, hidden_size=hidden_dim,  batch_first=True)
+        self.FC_input2 = nn.LSTM(input_size=hidden_dim, hidden_size=hidden_dim,  batch_first=True)
+        self.FC_mean = nn.LSTM(input_size=hidden_dim, hidden_size=latent_dim,  batch_first=True)
+        self.FC_var = nn.LSTM(input_size=hidden_dim, hidden_size=latent_dim,  batch_first=True)
 
         self.LeakyReLU = nn.LeakyReLU(0.2)
 

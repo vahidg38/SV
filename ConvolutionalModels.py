@@ -466,9 +466,9 @@ class parallel(nn.Module):
 
 
         self.AE_encoder = nn.Sequential(
-            torch.nn.Conv1d(1, 1,2),
+            nn.LSTM(input_size=5, hidden_size=4,  batch_first=True),
             torch.nn.ReLU(),
-            torch.nn.Conv1d(1, 1,2),
+            nn.Linear(4, 3),
             torch.nn.ReLU()
 
         )
@@ -480,9 +480,9 @@ class parallel(nn.Module):
 
         self.MemAE_encoder = nn.Sequential(
 
-            torch.nn.Conv1d(1, 1,2),
+            nn.LSTM(input_size=3, hidden_size=4,  batch_first=True),
             torch.nn.ReLU(),
-            torch.nn.Conv1d(1, 1,2),
+            nn.Linear(4, 5),
             torch.nn.ReLU()
 
         )
@@ -497,9 +497,9 @@ class parallel(nn.Module):
 
         self.g_decoder=  nn.Sequential(
 
-            torch.nn.Conv1d(1, 1,2),
+            nn.LSTM(input_size=9, hidden_size=7,  batch_first=True),
             torch.nn.ReLU(),
-            torch.nn.Conv1d(1, 1,2)
+            nn.Linear(7, 5)
 
         )
 

@@ -5,7 +5,7 @@ def get_args():
     parser = argparse.ArgumentParser(description="Autoencoders for data reconstruction",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('-bs', '--batch', type=int, default=64,
+    parser.add_argument('-bs', '--batch', type=int, default=32,
                         help='Number of samples that will be propagated through the network')
 
     parser.add_argument('-e', '--epochs', type=int, default=400,

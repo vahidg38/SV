@@ -3,6 +3,7 @@ from math import ceil
 from statistics import mean, stdev
 import pandas as pd
 import numpy as np
+from sklearn.metrics import r2_score
 
 
 def fault_generation(df_real, type='bias', sensor='PM25', magnitude=0, start=0, stop=100):
@@ -50,10 +51,12 @@ def fault_generation(df_real, type='bias', sensor='PM25', magnitude=0, start=0, 
     elif (type == 'Degradation'):
         mu, sigma = 0, 0.1
         noise = np.random.normal(mu, sigma, [stop - start, ])
-        faulty += magnitude * noise
+
+        faulty[start:stop] += magnitude * noise
 
     else:
         raise Exception("Inappropriate failure type.")
+
     df_real.drop(sensor, axis=1, inplace=True)
     # df_real[sensor] = faulty
     df_real.insert(pos, sensor, faulty, True)
@@ -61,30 +64,116 @@ def fault_generation(df_real, type='bias', sensor='PM25', magnitude=0, start=0, 
 
 
 # explicit function to normalize array
-def normalize_2d(matrix):
-    norm = np.linalg.norm(matrix)
-    matrix = matrix / norm  # normalized matrix
-    return matrix, norm
+def normalize(train, test, train_n):
+    # copy the data
+    df_z_scaled_train = train.copy()
+    df_z_scaled_test = test.copy()
+    df_z_scaled_train_n = train_n.copy()
+
+    # apply normalization techniques
+    for column in df_z_scaled_train.columns:
+        df_z_scaled_train[column] = (df_z_scaled_train[column] - df_z_scaled_train[column].mean()) / df_z_scaled_train[
+            column].std()
+        df_z_scaled_test[column] = (df_z_scaled_test[column] - df_z_scaled_test[column].mean()) / df_z_scaled_test[
+            column].std()
+        df_z_scaled_train_n[column] = (df_z_scaled_train_n[column] - df_z_scaled_train_n[column].mean()) / \
+                                      df_z_scaled_train_n[column].std()
+
+    return df_z_scaled_train, df_z_scaled_test, df_z_scaled_train_n
 
 
-def de_normalize_2d(matrix, norm):
-    matrix = matrix * norm  # denormalized matrix
-    return matrix
+def de_normalize(df, df_ori):
+    # copy the data
+    df_denorm = df.copy()
+
+    # apply normalization techniques
+    for column in df_denorm.columns:
+        df_denorm[column] = (df_denorm[column] * df_ori[column].std()) + df_ori[column].mean()
+
+    return df_denorm
+
 
 def data_loading(mat_file='IAQ_2month_Vah.mat', train_test_ratio=4):
     d = sio.loadmat(mat_file)
     d = d["Platfrom_C"]
 
-    d, norm = normalize_2d(d)
+    train_data = []
+    test_data = []
+
+    for i in range(d.shape[0]):
+        if i % (train_test_ratio + 1) == 0:
+            test_data.append(d[i])
+        else:
+            train_data.append(d[i])
+
+    return train_data, test_data
+
+
+def data_loading_csv(csv_file='Airdata.csv', train_test_ratio=4):
+    d = pd.read_csv(csv_file)
+
+    se_columns = ["측정소코드","PM25","CO","PM10","NO2"]
+    d = d[se_columns]
+    d=d[~d.isnull().any(axis=1)]
+   # d = d[(d.PM10 != "nan") & (d.PM25 != "nan") & (d.CO != "nan") & (d.NO2 != "nan")]
 
     train_data = []
     test_data = []
 
-    t = train_test_ratio / (train_test_ratio + 1)
+    for i in range(d.shape[0]):
+        if i % (train_test_ratio + 1) == 0:
+            test_data.append(d.iloc[i])
+        else:
+            train_data.append(d.iloc[i])
 
-    for i in range(ceil(d.shape[0] * t)):
-        train_data.append(d[i])
-    for j in range(ceil(d.shape[0] * t), d.shape[0]):
-        test_data.append(d[i])
+    return train_data, test_data
 
-    return train_data, test_data, norm
+
+def create_dataframe(data, sensors=['PM25', 'PM10', 'CO2', 'Temp', 'Humidity']):
+    data = pd.DataFrame(data, columns=sensors)
+    return data
+
+
+# Mean Square Error
+def MSE(true, predicted):
+    true = np.array(true)
+    predicted = np.array(predicted)
+    squared_diff = np.square(true - predicted)
+    return np.mean(squared_diff)
+
+
+# Root Mean Square Error
+def RMSE(true, predicted):
+    true = np.array(true)
+    predicted = np.array(predicted)
+    squared_diff = np.square(true - predicted)
+    return np.sqrt(np.mean(squared_diff))
+
+
+# R-squared, coefficient of determination
+def MAPE(true, predicted):
+    true = np.array(true)
+    predicted = np.array(predicted)
+    percentage = np.mean(np.abs((true - predicted) / true)) * 100
+    return percentage
+
+
+# Mean Absolute Error
+def MAE(true, predicted):
+    true = np.array(true)
+    predicted = np.array(predicted)
+    return np.mean(np.abs(true - predicted))
+
+
+def RR(true, predicted):
+    true = np.array(true)
+    predicted = np.array(predicted)
+    RR = r2_score(true, predicted)
+    return RR
+
+
+# Mean absolute scaled error
+def MASE(true, predicted, seasonality):
+    true = np.array(true)
+    predicted = np.array(predicted)
+    return MAE(true, predicted) / MAE(true[seasonality:], true[:-seasonality])
